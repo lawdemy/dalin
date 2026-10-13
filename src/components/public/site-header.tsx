@@ -3,21 +3,25 @@
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLayoutEffect, useState } from "react";
+import { Suspense, useLayoutEffect, useState } from "react";
 import { PUBLIC_NAV, SITE_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-const mobileLinks = [{ href: "/", label: "Home" }, ...PUBLIC_NAV];
+type NavItem = { href: string; label: string };
 
-export function SiteHeader({ name = SITE_NAME }: { name?: string }) {
-  const pathname = usePathname();
+type SiteHeaderProps = {
+  name?: string;
+  /** Hides the Moments link while the feed is switched off. */
+  momentsEnabled?: boolean;
+};
+
+export function SiteHeader({ name = SITE_NAME, momentsEnabled = true }: SiteHeaderProps) {
+  const nav = PUBLIC_NAV.filter((item) => momentsEnabled || item.href !== "/moments");
+  const mobileLinks = [{ href: "/", label: "Home" }, ...nav];
   const [open, setOpen] = useState(false);
 
   // Next keeps hidden routes mounted; don't return to an open menu.
   useLayoutEffect(() => () => setOpen(false), []);
-
-  const isCurrent = (href: string) =>
-    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
     <header className="relative z-10 border-b border-sand bg-ivory">
@@ -30,19 +34,7 @@ export function SiteHeader({ name = SITE_NAME }: { name?: string }) {
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-8 md:flex">
-          {PUBLIC_NAV.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              aria-current={isCurrent(href) ? "page" : undefined}
-              className={cn(
-                "flex min-h-11 items-center text-[0.9375rem] font-medium no-underline",
-                isCurrent(href) ? "text-accent-dark" : "text-ink hover:text-accent-dark",
-              )}
-            >
-              {label}
-            </Link>
-          ))}
+          <NavLinks items={nav} variant="desktop" />
         </nav>
 
         <button
@@ -67,24 +59,64 @@ export function SiteHeader({ name = SITE_NAME }: { name?: string }) {
           aria-label="Main"
           className="absolute inset-x-0 top-16 flex flex-col border-b border-sand bg-ivory py-2 shadow-menu md:hidden"
         >
-          {mobileLinks.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              onNavigate={() => setOpen(false)}
-              aria-current={isCurrent(href) ? "page" : undefined}
-              className={cn(
-                "flex h-14 items-center px-5 font-serif text-[1.625rem] no-underline",
-                isCurrent(href)
-                  ? "font-semibold text-accent-dark"
-                  : "font-medium text-ink hover:text-accent-dark",
-              )}
-            >
-              {label}
-            </Link>
-          ))}
+          <NavLinks items={mobileLinks} variant="mobile" onNavigate={() => setOpen(false)} />
         </nav>
       )}
     </header>
   );
+}
+
+type NavLinksProps = {
+  items: NavItem[];
+  variant: "desktop" | "mobile";
+  onNavigate?: () => void;
+};
+
+/**
+ * The current path is only known at request time on dynamic routes
+ * (/moments/[slug]), so the highlighted links stream in; the plain links
+ * render immediately as the fallback.
+ */
+function NavLinks(props: NavLinksProps) {
+  return (
+    <Suspense fallback={<NavLinkList {...props} pathname={null} />}>
+      <CurrentNavLinks {...props} />
+    </Suspense>
+  );
+}
+
+function CurrentNavLinks(props: NavLinksProps) {
+  const pathname = usePathname();
+  return <NavLinkList {...props} pathname={pathname} />;
+}
+
+function NavLinkList({
+  items,
+  variant,
+  onNavigate,
+  pathname,
+}: NavLinksProps & { pathname: string | null }) {
+  const isCurrent = (href: string) =>
+    pathname !== null &&
+    (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
+
+  return items.map(({ href, label }) => (
+    <Link
+      key={href}
+      href={href}
+      onNavigate={onNavigate}
+      aria-current={isCurrent(href) ? "page" : undefined}
+      className={cn(
+        "no-underline",
+        variant === "desktop"
+          ? "flex min-h-11 items-center text-[0.9375rem] font-medium"
+          : "flex h-14 items-center px-5 font-serif text-[1.625rem]",
+        isCurrent(href)
+          ? cn("text-accent-dark", variant === "mobile" && "font-semibold")
+          : cn("text-ink hover:text-accent-dark", variant === "mobile" && "font-medium"),
+      )}
+    >
+      {label}
+    </Link>
+  ));
 }

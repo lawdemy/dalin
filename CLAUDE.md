@@ -2,7 +2,7 @@
 
 A private diary website for two people (the owner and their fiancée) to record the daily events, activities and photos of their life together. A small public side shows a curated face of the relationship. A login-only private side holds the full diary.
 
-**Status:** Phases 1–3 done (scaffold, Supabase, auth). Supabase project `qhvcmsajbnhqnlsxuhqx` is live with migrations 0001–0003 applied (0004 written, run it in the SQL Editor), sign-ups disabled and both accounts created. Work through the remaining build phases in order. `DESIGN.md` holds the visual spec from the prototype; where it and this file disagree, the **Decisions** below win.
+**Status:** Phases 1–4 and 6 done (scaffold, Supabase, auth, entries with photo upload, public site). Supabase project `qhvcmsajbnhqnlsxuhqx` is live with migrations 0001–0004 applied (0005 written: run it in the SQL Editor), sign-ups disabled and both accounts created. Photo files live in Cloudinary (cloud `p44yxlqe`). Work through the remaining build phases in order. `DESIGN.md` holds the visual spec from the prototype; where it and this file disagree, the **Decisions** below win.
 
 ---
 
@@ -18,18 +18,18 @@ A private diary website for two people (the owner and their fiancée) to record 
 
 ## Tech stack
 
-| Concern             | Choice                                                                                                                                  |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Framework           | Next.js (latest, App Router), TypeScript in strict mode                                                                                 |
-| Styling             | Tailwind CSS (v4, CSS-first `@theme` tokens)                                                                                            |
-| Auth / DB / Storage | Supabase (`@supabase/supabase-js` + `@supabase/ssr`)                                                                                    |
-| Mutations           | Server Actions, validated with Zod                                                                                                      |
-| Rich text           | Tiptap editor; body stored as Tiptap JSON (`jsonb`), rendered to HTML on the server                                                     |
-| Images              | `next/image` with Supabase signed URLs; client-side resize/compress before upload (`browser-image-compression`), which also strips EXIF |
-| Dates               | `date-fns`                                                                                                                              |
-| Fonts               | `next/font/google`: **Cormorant Garamond** (headings), **Inter** (body)                                                                 |
-| Hosting             | Vercel                                                                                                                                  |
-| Package manager     | pnpm                                                                                                                                    |
+| Concern             | Choice                                                                                                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework           | Next.js (latest, App Router), TypeScript in strict mode                                                                                                                                                                   |
+| Styling             | Tailwind CSS (v4, CSS-first `@theme` tokens)                                                                                                                                                                              |
+| Auth / DB / Storage | Supabase (`@supabase/supabase-js` + `@supabase/ssr`)                                                                                                                                                                      |
+| Mutations           | Server Actions, validated with Zod                                                                                                                                                                                        |
+| Rich text           | Tiptap editor; body stored as Tiptap JSON (`jsonb`), rendered to HTML on the server                                                                                                                                       |
+| Images              | Files in **Cloudinary** as private (`authenticated`) assets; `CloudImage` (next/image + pre-signed URLs at fixed widths). Client-side resize/compress before upload (`browser-image-compression`), which also strips EXIF |
+| Dates               | `date-fns`                                                                                                                                                                                                                |
+| Fonts               | `next/font/google`: **Cormorant Garamond** (headings), **Inter** (body)                                                                                                                                                   |
+| Hosting             | Vercel                                                                                                                                                                                                                    |
+| Package manager     | pnpm                                                                                                                                                                                                                      |
 
 Route protection lives in `src/proxy.ts` (Next 16+; it was `middleware.ts` in older versions; with a `src/` folder it must sit next to `app/`). It refreshes the Supabase session and redirects unauthenticated requests on `/admin/**` to `/login`. Every admin Server Action also re-checks the user server-side, so it never relies on the proxy alone.
 
@@ -161,12 +161,17 @@ RLS: anon can select where `photo_is_public`. Members have full CRUD.
 
 RLS: anon and members can select. Members can update. No insert or delete from the client.
 
-### Storage
+### Storage (photo files in Cloudinary)
 
-- One **private** bucket, `photos`. Nothing is served from a public bucket, so URLs can't be guessed.
-- `storage.objects` policies: members get full access. Anon gets `select` only on objects whose `name` matches a `photos.storage_path` that passes `photo_is_public`.
-- Pages render images using **signed URLs** created server-side (about 1 hour expiry; public pages use ISR with a shorter revalidate than the expiry).
-- Upload pipeline (client): resize to a 2560px longest edge, encode as WebP at about 0.82 quality (this strips EXIF), read width, height and `taken_at` first, then upload straight to Storage and insert the `photos` row through a Server Action.
+Decided 13 Oct 2026: files live in Cloudinary (free plan); the `photos` table and its RLS stay in Supabase and still decide who sees what.
+
+- Every file is a private **`authenticated`** asset with public_id `dalin/photos/{yyyy}/{mm}/{uuid}` (stored in `photos.storage_path`; the uuid is also the row id). Never use the public `upload` type.
+- Nothing loads without a URL signed on the server (`src/lib/cloudinary.ts`). The server signs **only rows it just read through Supabase**, so RLS decides: public pages use the anonymous client, admin pages the member's session.
+- Signed Cloudinary URLs **don't expire** on the free plan. So whenever a photo **stops being public** (entry made private, photo removed from gallery/About, hero changed, Moments switched off), the app **renames the asset** (`renameAsset`, with CDN invalidation) and updates `storage_path`; old links die within ~20 s (measured). `public_photo_ids(ids)` reports which photos are public before and after a change. Phase 7's toggles must do this too.
+- Upload pipeline (client, `src/components/admin/upload-photo.ts`): read `taken_at`, resize to a 2560px longest edge and re-encode to WebP ~0.82 (JPEG fallback), which strips EXIF/GPS; make a 16px blur placeholder; get a one-time signed upload ticket (server picks the public_id); upload straight to Cloudinary; `registerPhoto` checks the asset with Cloudinary (type, format, size) and inserts the row (unattached until the entry is saved).
+- Deleting a photo or entry also destroys the Cloudinary assets.
+- Keys: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, server-only.
+- The Supabase `photos` bucket and its policies (0003) remain but are unused. Videos: later (`photos.media_type` is ready).
 
 ### Migrations
 
@@ -179,7 +184,7 @@ SQL lives in `supabase/migrations/` and is managed with the Supabase CLI (`supab
 ```
 DaLin/
 ├─ CLAUDE.md
-├─ .env.local.example        # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server-only, scripts only)
+├─ .env.local.example        # Supabase URL + anon key, NEXT_PUBLIC_SITE_URL, CLOUDINARY_* (server-only), SUPABASE_SERVICE_ROLE_KEY (scripts only)
 ├─ next.config.ts            # images.remotePatterns for the Supabase host
 ├─ supabase/
 │  ├─ config.toml
@@ -231,7 +236,8 @@ DaLin/
    │  │  └─ database.types.ts
    │  ├─ auth.ts             # requireMember() helper for server code
    │  ├─ queries/            # entries.ts, photos.ts, settings.ts (typed read helpers)
-   │  ├─ images.ts           # signed URL helpers, client compression
+   │  ├─ images.ts           # photo rows → signed sources
+   │  ├─ cloudinary.ts       # signing, upload tickets, rename/destroy (server-only)
    │  ├─ validation.ts       # Zod schemas
    │  └─ constants.ts        # mood/category labels + emoji
    └─ types/
@@ -271,6 +277,8 @@ DaLin/
 - **No "Forgot password" link.** Passwords are reset in the Supabase dashboard.
 - **No wedding countdown yet.**
 - **Photo resize stays at 2560px** longest edge.
+- **Photo files in Cloudinary**, free plan, re-keyed when unpublished (see Storage). **Videos later.**
+- **Admin read view** at `/admin/entries/[id]`, editor at `/admin/entries/new` and `/admin/entries/[id]/edit`. Tab bar hidden in the editor (the save bar replaces it). "Today" uses `Africa/Lagos`.
 - **Either partner may edit or delete the other's entries.**
 
 ## Open questions (fill in when known)

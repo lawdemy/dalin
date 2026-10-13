@@ -26,6 +26,13 @@ export const MORE_ITEMS: NavItem[] = [
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
-export function isActive(pathname: string, href: string) {
+/** `pathname` is null while it is still streaming in (dynamic routes). */
+export function isActive(pathname: string | null, href: string) {
+  if (pathname === null) return false;
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+}
+
+/** Entry editor pages, where the save bar replaces the tab bar. */
+export function isEditorPath(pathname: string | null) {
+  return pathname !== null && /^\/admin\/entries\/(new|[^/]+\/edit)$/.test(pathname);
 }

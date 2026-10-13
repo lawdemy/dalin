@@ -17,12 +17,23 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
+// Absolute base for share links: NEXT_PUBLIC_SITE_URL, else Vercel's
+// production domain, else local dev.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: SITE_NAME,
     template: `%s · ${SITE_NAME}`,
   },
   description: "Our life together, one day at a time.",
+  openGraph: { type: "website", siteName: SITE_NAME, locale: "en_GB" },
+  twitter: { card: "summary_large_image" },
   // The PRD keeps the whole site out of search engines until we decide otherwise.
   robots: { index: false, follow: false },
 };

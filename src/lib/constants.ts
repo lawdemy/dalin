@@ -2,6 +2,9 @@
 export const SITE_NAME = "Daniel & Linda";
 export const SITE_TAGLINE = "Written together, one day at a time.";
 
+/** "Today" for new entries is the date in Lagos. */
+export const TIME_ZONE = "Africa/Lagos";
+
 export const PUBLIC_NAV = [
   { href: "/about", label: "About us" },
   { href: "/gallery", label: "Gallery" },

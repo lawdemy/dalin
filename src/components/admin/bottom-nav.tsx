@@ -3,17 +3,40 @@
 import { Ellipsis, LogOut, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { signOut } from "@/app/login/actions";
 import { cn } from "@/lib/utils";
-import { isActive, MORE_ITEMS, NEW_ENTRY_HREF, TAB_ITEMS, type NavItem } from "./nav-items";
+import {
+  isActive,
+  isEditorPath,
+  MORE_ITEMS,
+  NEW_ENTRY_HREF,
+  TAB_ITEMS,
+  type NavItem,
+} from "./nav-items";
 
-/** Phone tab bar: Home · Timeline · (+) · Photos · More. Hidden on desktop. */
+/**
+ * Phone tab bar: Home · Timeline · (+) · Photos · More. Hidden on desktop and
+ * on entry editor pages. The path streams in on dynamic routes, so the bar
+ * first renders without a highlighted tab.
+ */
 export function BottomNav() {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<TabBar pathname={null} />}>
+      <CurrentTabBar />
+    </Suspense>
+  );
+}
+
+function CurrentTabBar() {
+  return <TabBar pathname={usePathname()} />;
+}
+
+function TabBar({ pathname }: { pathname: string | null }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const moreActive = MORE_ITEMS.some(({ href }) => isActive(pathname, href));
   const [home, timeline, photos] = TAB_ITEMS;
+  if (isEditorPath(pathname)) return null;
 
   return (
     <>
@@ -78,7 +101,7 @@ function MoreSheet({
 }: {
   open: boolean;
   onClose: () => void;
-  pathname: string;
+  pathname: string | null;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const onCloseRef = useRef(onClose);

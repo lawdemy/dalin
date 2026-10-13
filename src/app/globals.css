@@ -121,3 +121,37 @@
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* Text inside the Tiptap editor; mirrors how RichText renders it. */
+@layer components {
+  .rich-editor {
+    & > * + * {
+      margin-top: 0.75rem;
+    }
+    & h2 {
+      @apply mt-4 font-serif text-section font-semibold;
+    }
+    & h3 {
+      @apply mt-3 font-serif text-card font-semibold;
+    }
+    & ul {
+      @apply list-disc pl-6;
+    }
+    & ol {
+      @apply list-decimal pl-6;
+    }
+    & blockquote {
+      @apply rounded-xl bg-ivory px-4 py-3 font-serif text-quote font-medium italic;
+    }
+    & a {
+      @apply underline underline-offset-2;
+    }
+    &:focus-visible {
+      outline: none; /* the wrapper shows the focus ring */
+    }
+    & p.is-editor-empty:first-child::before {
+      @apply pointer-events-none float-left h-0 text-muted;
+      content: attr(data-placeholder);
+    }
+  }
+}

@@ -4,3 +4,4 @@ node_modules
 src/lib/supabase/database.types.ts
 *.html
 *.pdf
+public/vendor
