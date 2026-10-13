@@ -431,6 +431,8 @@ The PRD is dated 13 Oct 2026, the same day as the prototype. It sets out the req
 
 ## Conflicts with CLAUDE.md (decide before building)
 
+> **Resolved on 13 Oct 2026.** The decisions are recorded in CLAUDE.md under **Decisions**, and CLAUDE.md has been updated to match. The list below is kept for history.
+
 PRD verdicts are noted in _italics_ where the PRD takes a side.
 
 1. **Palette values differ.** Prototype vs CLAUDE.md:

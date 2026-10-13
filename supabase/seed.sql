@@ -3,7 +3,7 @@
 
 -- The single site_settings row. Edit the text later in /admin/about.
 insert into public.site_settings (id, couple_names, welcome_line)
-values (1, 'Our Diary', 'Welcome to our little corner of the internet.')
+values (1, 'Daniel & Linda', 'Welcome to our little corner of the internet.')
 on conflict (id) do nothing;
 
 -- The two of us. Create both users first (Authentication → Users → Add user),

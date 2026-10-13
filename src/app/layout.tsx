@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
+import { SITE_NAME } from "@/lib/constants";
 import "./globals.css";
 
 const inter = Inter({
@@ -18,8 +19,8 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: {
-    default: "Our Diary",
-    template: "%s · Our Diary",
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
   },
   description: "Our life together, one day at a time.",
   // The PRD keeps the whole site out of search engines until we decide otherwise.

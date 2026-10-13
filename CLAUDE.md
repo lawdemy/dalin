@@ -2,7 +2,7 @@
 
 A private diary website for two people (the owner and their fiancée) to record the daily events, activities and photos of their life together. A small public side shows a curated face of the relationship. A login-only private side holds the full diary.
 
-**Status:** Planning complete, no code written yet. Work through the build phases below in order.
+**Status:** Phases 1–3 done (scaffold, Supabase, auth). Supabase project `qhvcmsajbnhqnlsxuhqx` is live with migrations 0001–0003 applied (0004 written, run it in the SQL Editor), sign-ups disabled and both accounts created. Work through the remaining build phases in order. `DESIGN.md` holds the visual spec from the prototype; where it and this file disagree, the **Decisions** below win.
 
 ---
 
@@ -11,7 +11,7 @@ A private diary website for two people (the owner and their fiancée) to record 
 - **Exactly two accounts.** There is no public sign-up, ever. Public sign-ups are disabled in Supabase Auth settings, both users are created by hand in the Supabase dashboard, and there is no sign-up route or UI. Every write policy also checks membership in `profiles`.
 - **Private by default.** New entries and photos are `private`. Nothing reaches the public side unless it is explicitly marked public.
 - **Privacy is enforced in the database, not only in the UI.** Row Level Security (RLS) is on every table and on storage. Public pages query as the anonymous role, so RLS alone decides what they can see.
-- **Mobile first.** Most posting happens on phones. Design and test at 375px width first. The new-entry flow must be quick with one thumb.
+- **Mobile first.** Most posting happens on phones. Design and test at 360px width first. The new-entry flow must be quick with one thumb.
 - **Strip EXIF/GPS from every uploaded photo** (client-side re-encode before upload) so public photos never leak locations.
 
 ---
@@ -31,22 +31,27 @@ A private diary website for two people (the owner and their fiancée) to record 
 | Hosting             | Vercel                                                                                                                                  |
 | Package manager     | pnpm                                                                                                                                    |
 
-Route protection lives in `proxy.ts` (Next 16+; it was `middleware.ts` in older versions). It refreshes the Supabase session and redirects unauthenticated requests on `/admin/**` to `/login`. Every admin Server Action also re-checks the user server-side, so it never relies on the proxy alone.
+Route protection lives in `src/proxy.ts` (Next 16+; it was `middleware.ts` in older versions; with a `src/` folder it must sit next to `app/`). It refreshes the Supabase session and redirects unauthenticated requests on `/admin/**` to `/login`. Every admin Server Action also re-checks the user server-side, so it never relies on the proxy alone.
 
 ---
 
 ## Design system
 
-- **Mood:** warm, romantic, elegant, clean. Generous whitespace, soft rounded corners (`rounded-2xl` cards), subtle shadows, no clutter.
-- **Palette** (Tailwind theme tokens):
-  - `ivory` `#FAF7F2`: page background
-  - `linen` `#F1EBE3`: cards and sections
-  - `sand` `#E3D9CC`: borders and dividers
-  - `taupe` `#8A7F74`: muted text
+Follows the prototype (`DESIGN.md`). Tokens live in `src/app/globals.css`; components in `src/components/ui/`; `/styleguide` shows them all.
+
+- **Mood:** warm, romantic, elegant, clean. Generous whitespace, 12px rounded corners (`rounded-xl`) on cards, inputs, buttons and photos, shadows only on raised elements (menus, the + button, dialogs, toasts), no clutter.
+- **Palette** (Tailwind theme tokens; the default Tailwind palette is cleared):
+  - `ivory` `#FBF8F3`: page background
+  - `linen` `#F3ECE2`: cards, inputs
+  - `sand` `#E4D7C5`: borders and dividers
+  - `muted` `#6E635A`: secondary text
   - `ink` `#2E2A27`: main text
-  - `rose` `#B9776B`: **the single accent** (links, buttons, highlights). Hover state: `rose-dark` `#9E5F54`.
-- **Type:** Cormorant Garamond (500/600) for headings and names, Inter for body and UI. Body text 16px minimum on mobile.
-- **Mobile:** bottom tab bar in admin (Timeline · Calendar · **+ New** · Photos · More). Tap targets at least 44px. Sticky save bar on the entry editor. Photo picker uses `accept="image/*"` with multiple selection.
+  - `accent` `#B9776B`: **the single accent hue**, used for icons, focus ring and dots. Not for text or button fills (white on it fails contrast).
+  - `accent-dark` `#9C5F54`: buttons, links, active states. Hover/pressed: `accent-deep` `#844E45`.
+  - Supporting tokens (borders, tints, danger, lightbox, photo placeholders) are in `globals.css`.
+- **Type:** Cormorant Garamond (500/600, italic for quotes) for headings and names, Inter (400/500/600) for body and UI. Body text 16px minimum on mobile. Size tokens: `text-title` 40 / `text-title-lg` 56, `text-section` 28 / `text-section-lg` 36, `text-caption` 13 and others in `globals.css`.
+- **Mobile:** bottom tab bar in admin (Home · Timeline · **+ New** · Photos · More; More holds Calendar, About editor, Settings, Sign out). Tap targets at least 44px. Sticky save bar on the entry editor. Photo picker uses `accept="image/*"` with multiple selection.
+- **Desktop admin:** navigation in the top header for now (the PRD's left sidebar is not designed yet).
 - **Dark mode:** not in v1. Keep colours as tokens so it can be added later.
 
 ---
@@ -81,8 +86,8 @@ All tables have RLS enabled. `is_member()` is a `security definer` SQL function 
 ### Enums
 
 - `entry_visibility`: `private` | `public`
-- `entry_category`: `date_night` | `travel` | `milestone` | `everyday` | `food` | `family_friends` | `home` | `other` (extend with `ALTER TYPE … ADD VALUE`)
-- `entry_mood`: `joyful` | `loved` | `excited` | `peaceful` | `grateful` | `silly` | `tired` | `sad` (each mapped to an emoji in the UI)
+- `entry_category`: `everyday` | `date_night` | `travel` | `milestone` | `food` | `family` | `other` (prototype list, migration 0004; extend with `ALTER TYPE … ADD VALUE`)
+- `entry_mood`: `loved` | `happy` | `calm` | `excited` | `funny` | `tired` | `bittersweet` | `sad` (prototype list, migration 0004; labels and emoji in `src/lib/constants.ts`)
 
 ### `profiles`: the two of us (one row per auth user)
 
@@ -114,7 +119,7 @@ RLS: members can select. Each user can update only their own row. No insert or d
 | created_at / updated_at | timestamptz                                 | `updated_at` maintained by trigger               |
 
 Indexes: `(entry_date desc)`, `(visibility, entry_date desc)`, and a GIN full-text index on `body_text` and `title`.
-RLS: **anon** can select where `visibility = 'public'`. **Members** can select all rows, insert (with `author_id = auth.uid()`), and update or delete all rows (either partner may fix the other's typo). Change this to "own rows only" if preferred.
+RLS: **anon** can select where `visibility = 'public'` **and the Moments feed is on** (`moments_enabled()`); turning Moments off hides every public entry from visitors. **Members** can select all rows, insert (with `author_id = auth.uid()`), and update or delete all rows (either partner may fix the other's typo). Change this to "own rows only" if preferred.
 
 ### `photos`
 
@@ -135,7 +140,7 @@ RLS: **anon** can select where `visibility = 'public'`. **Members** can select a
 | uploaded_by      | uuid not null                  | FK → profiles.id                                                                           |
 | created_at       | timestamptz                    |                                                                                            |
 
-**Public-visibility rule** (one SQL function `photo_is_public(photo)` used by both table and storage policies): a photo is public if `is_public` or `show_on_about` is true, if it is the hero photo, or if its entry is public.
+**Public-visibility rule** (one SQL function `photo_is_public(photo)` used by both table and storage policies): a photo is public if `is_public` or `show_on_about` is true, if it is the hero photo, or if its entry is public **and the Moments feed is on**.
 RLS: anon can select where `photo_is_public`. Members have full CRUD.
 
 ### `site_settings`: single row (`id = 1`, enforced by a check constraint)
@@ -143,7 +148,7 @@ RLS: anon can select where `photo_is_public`. Members have full CRUD.
 | column           | type                  | notes                                      |
 | ---------------- | --------------------- | ------------------------------------------ |
 | id               | int PK check (id = 1) |                                            |
-| couple_names     | text                  | e.g. "Dan & Lin"                           |
+| couple_names     | text                  | "Daniel & Linda"                           |
 | welcome_line     | text                  |                                            |
 | hero_photo_id    | uuid null             | FK → photos.id, on delete set null         |
 | our_story        | jsonb                 | Tiptap JSON                                |
@@ -175,14 +180,14 @@ SQL lives in `supabase/migrations/` and is managed with the Supabase CLI (`supab
 DaLin/
 ├─ CLAUDE.md
 ├─ .env.local.example        # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server-only, scripts only)
-├─ proxy.ts                  # session refresh + /admin guard
 ├─ next.config.ts            # images.remotePatterns for the Supabase host
 ├─ supabase/
 │  ├─ config.toml
-│  ├─ migrations/            # 0001_init.sql, 0002_rls.sql, 0003_storage.sql …
+│  ├─ migrations/            # 0001_init.sql, 0002_rls.sql, 0003_storage.sql, 0004_prototype_lists_and_moments_toggle.sql …
 │  └─ seed.sql               # site_settings row; profiles inserted after creating the two auth users
 ├─ public/                   # favicon, og-image, manifest icons
 └─ src/
+   ├─ proxy.ts               # session refresh + /admin guard
    ├─ app/
    │  ├─ layout.tsx          # fonts, base metadata
    │  ├─ globals.css         # Tailwind + @theme tokens
@@ -256,9 +261,19 @@ DaLin/
 - Render rich text on the server from JSON with a fixed allowlist of node and mark types. Never inject user HTML.
 - Before shipping a privacy-related change, check that a logged-out request cannot reach private entries or photos, including direct storage URLs.
 
+## Decisions (13 Oct 2026)
+
+- **Names:** "Daniel & Linda" (`site_settings.couple_names`, `SITE_NAME` fallback).
+- **Design:** follow the prototype (`DESIGN.md`): palette above, 12px radius, tab order, 360px minimum width.
+- **Moods and categories:** the prototype's lists (migration 0004).
+- **Moments off hides public entries** and photos that are public only through their entry (migration 0004). Gallery, About and hero photos stay public.
+- **No author name on public moments.** `profiles` stays members-only.
+- **No "Forgot password" link.** Passwords are reset in the Supabase dashboard.
+- **No wedding countdown yet.**
+- **Photo resize stays at 2560px** longest edge.
+- **Either partner may edit or delete the other's entries.**
+
 ## Open questions (fill in when known)
 
-- Couple names, how they should appear, and the welcome line text
-- Final accent colour (default dusty rose `#B9776B`)
+- Welcome line text (placeholder: "Welcome to our little corner of the internet.")
 - Custom domain (or `*.vercel.app` for now)
-- Should either partner be able to edit or delete the other's entries? (Default: yes)
