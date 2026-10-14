@@ -32,7 +32,10 @@ export function isActive(pathname: string | null, href: string) {
   return href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 }
 
-/** Entry editor pages, where the save bar replaces the tab bar. */
+/** Editor pages (entries, About), where the save bar replaces the tab bar. */
 export function isEditorPath(pathname: string | null) {
-  return pathname !== null && /^\/admin\/entries\/(new|[^/]+\/edit)$/.test(pathname);
+  return (
+    pathname !== null &&
+    (/^\/admin\/entries\/(new|[^/]+\/edit)$/.test(pathname) || pathname === "/admin/about")
+  );
 }

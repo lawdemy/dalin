@@ -2,11 +2,10 @@ import { ArrowLeft, Calendar, ExternalLink, MapPin, Pencil, UserRound } from "lu
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PhotoGrid } from "@/components/public/photo-grid";
+import { PhotoGrid, ViewablePhoto } from "@/components/public/photo-grid";
 import { RichText } from "@/components/rich-text/rich-text";
 import { buttonClasses } from "@/components/ui/button";
 import { Tag } from "@/components/ui/chip";
-import { CloudImage } from "@/components/ui/cloud-image";
 import { EmptyState } from "@/components/ui/empty-state";
 import { VisibilityBadge } from "@/components/ui/visibility-badge";
 import { categoryLabel, formatEntryDate, moodInfo } from "@/lib/format";
@@ -85,17 +84,13 @@ export default async function EntryPage({ params }: PageProps<"/admin/entries/[i
       </header>
 
       {cover && (
-        <div className="relative -mx-5 h-75 overflow-hidden bg-tone-2 md:mx-0 md:h-105 md:rounded-xl">
-          <CloudImage
-            sources={cover.sources}
-            blurDataUrl={cover.blurDataUrl}
-            alt={cover.alt}
-            fill
-            priority
-            sizes="(min-width: 768px) 720px, 100vw"
-            className="object-cover"
-          />
-        </div>
+        <ViewablePhoto
+          photos={entry.photos}
+          index={entry.photos.indexOf(cover)}
+          priority
+          sizes="(min-width: 768px) 720px, 100vw"
+          className="-mx-5 h-75 w-auto bg-tone-2 md:mx-0 md:h-105 md:rounded-xl"
+        />
       )}
 
       {isEmptyDoc(entry.body) ? (

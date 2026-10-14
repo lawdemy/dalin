@@ -2,7 +2,7 @@
 
 A private diary website for two people (the owner and their fiancée) to record the daily events, activities and photos of their life together. A small public side shows a curated face of the relationship. A login-only private side holds the full diary.
 
-**Status:** Phases 1–4 and 6 done (scaffold, Supabase, auth, entries with photo upload, public site). Supabase project `qhvcmsajbnhqnlsxuhqx` is live with migrations 0001–0004 applied (0005 written: run it in the SQL Editor), sign-ups disabled and both accounts created. Photo files live in Cloudinary (cloud `p44yxlqe`). Work through the remaining build phases in order. `DESIGN.md` holds the visual spec from the prototype; where it and this file disagree, the **Decisions** below win.
+**Status:** Phases 1–4, 6 and 7 done, phase 5 partly (timeline, calendar and entry read view built; dashboard still a placeholder). Supabase project `qhvcmsajbnhqnlsxuhqx` is live with migrations 0001–0005 applied, sign-ups disabled and both accounts created. Photo files live in Cloudinary (cloud `p44yxlqe`). Work through the remaining build phases in order. `DESIGN.md` holds the visual spec from the prototype; where it and this file disagree, the **Decisions** below win.
 
 ---
 
@@ -278,6 +278,9 @@ DaLin/
 - **No wedding countdown yet.**
 - **Photo resize stays at 2560px** longest edge.
 - **Photo files in Cloudinary**, free plan, re-keyed when unpublished (see Storage). **Videos later.**
+- **Names and welcome line are edited in the About editor** (`/admin/about`), which also picks the hero and orders About photos. **Settings** (`/admin/settings`) holds the Moments switch (turning it off re-keys entry-only photos) and each person's own display name and profile photo.
+- **Profile photos** are private Cloudinary assets under `dalin/avatars/{uuid}` (`profiles.avatar_path`), members-only, max 1024px.
+- **Calendar "Write about it"** opens `/admin/entries/new?date=yyyy-mm-dd`.
 - **Admin read view** at `/admin/entries/[id]`, editor at `/admin/entries/new` and `/admin/entries/[id]/edit`. Tab bar hidden in the editor (the save bar replaces it). "Today" uses `Africa/Lagos`.
 - **Either partner may edit or delete the other's entries.**
 

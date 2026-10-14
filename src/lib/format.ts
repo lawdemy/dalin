@@ -28,3 +28,25 @@ export function entryMeta(date: string, category: Category) {
 export function todayInDiary(now = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(now);
 }
+
+/** "Wednesday 14 October" for now, in the diary's time zone. */
+export function longTodayInDiary(now = new Date()) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIME_ZONE,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(now);
+}
+
+/** "Good morning" / "Good afternoon" / "Good evening" in the diary's time zone. */
+export function greetingInDiary(now = new Date()) {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: TIME_ZONE,
+      hour: "numeric",
+      hour12: false,
+    }).format(now),
+  );
+  return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+}

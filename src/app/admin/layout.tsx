@@ -3,6 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { BottomNav } from "@/components/admin/bottom-nav";
 import { requireMember } from "@/lib/auth";
+import AdminLoading from "./loading";
 
 export const metadata: Metadata = {
   title: "Diary",
@@ -25,20 +26,11 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
 
 /**
  * Renders the page only for a signed-in member. This is the second gate after
- * proxy.ts. Layouts don't re-run on client navigation, so every admin page and
- * Server Action must still call requireMember() itself.
+ * proxy.ts (it covers direct visits; loading.tsx covers client navigations).
+ * Layouts don't re-run on client navigation, so every admin page and Server
+ * Action must still call requireMember() itself.
  */
 async function MembersOnly({ children }: { children: ReactNode }) {
   await requireMember();
   return children;
-}
-
-function AdminLoading() {
-  return (
-    <div role="status" aria-label="Loading" className="flex flex-col gap-4">
-      <div className="h-10 w-2/3 animate-pulse rounded-xl bg-linen" />
-      <div className="h-14 animate-pulse rounded-xl bg-linen" />
-      <div className="h-32 animate-pulse rounded-xl bg-linen" />
-    </div>
-  );
 }

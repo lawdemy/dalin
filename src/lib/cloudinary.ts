@@ -16,6 +16,11 @@ const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
 export const PHOTO_FOLDER = "dalin/photos";
 const PUBLIC_ID_PATTERN = /^dalin\/photos\/\d{4}\/\d{2}\/[0-9a-f-]{36}$/;
+/** Profile photos: members-only, never public. */
+export const AVATAR_FOLDER = "dalin/avatars";
+const AVATAR_ID_PATTERN = /^dalin\/avatars\/[0-9a-f-]{36}$/;
+
+export type AssetKind = "photo" | "avatar";
 const ALLOWED_FORMATS = ["webp", "jpg"];
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
@@ -38,8 +43,8 @@ function client() {
   return cloudinary;
 }
 
-export function isValidPublicId(publicId: string) {
-  return PUBLIC_ID_PATTERN.test(publicId);
+export function isValidPublicId(publicId: string, kind: AssetKind = "photo") {
+  return (kind === "avatar" ? AVATAR_ID_PATTERN : PUBLIC_ID_PATTERN).test(publicId);
 }
 
 /** A fresh, unguessable public_id, e.g. dalin/photos/2026/10/<uuid>. */
@@ -84,9 +89,9 @@ export type UploadTicket = {
  * A one-time signed upload for a server-chosen public_id. The browser posts
  * the file straight to Cloudinary with these fields.
  */
-export function createUploadTicket(): UploadTicket {
+export function createUploadTicket(kind: AssetKind = "photo"): UploadTicket {
   const cld = client();
-  const publicId = newPhotoPublicId();
+  const publicId = kind === "avatar" ? `${AVATAR_FOLDER}/${randomUUID()}` : newPhotoPublicId();
   const params = {
     public_id: publicId,
     type: "authenticated",
@@ -106,8 +111,8 @@ export function createUploadTicket(): UploadTicket {
  * Confirms an upload landed as a private image within limits, and returns
  * its real size (never trust the browser's numbers). Null if not acceptable.
  */
-export async function verifyUpload(publicId: string) {
-  if (!isValidPublicId(publicId)) return null;
+export async function verifyUpload(publicId: string, kind: AssetKind = "photo") {
+  if (!isValidPublicId(publicId, kind)) return null;
   try {
     const r = await client().api.resource(publicId, { type: "authenticated" });
     const ok =

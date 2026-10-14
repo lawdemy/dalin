@@ -39,13 +39,18 @@ export async function registerPhoto(input: unknown): Promise<{ photo?: Photo; er
   if (!parsed.success) return { error: "That upload couldn't be recorded." };
   const { publicId, takenAt, blurDataUrl } = parsed.data;
 
+  const db = await createClient();
   const asset = await verifyUpload(publicId);
   if (!asset) {
-    await destroyAssets([publicId]);
+    // Clean up only a fresh upload, never a file an existing photo uses.
+    const { count } = await db
+      .from("photos")
+      .select("id", { count: "exact", head: true })
+      .eq("storage_path", publicId);
+    if (!count) await destroyAssets([publicId]);
     return { error: "That photo didn't upload correctly. Try again." };
   }
 
-  const db = await createClient();
   const { data, error } = await db
     .from("photos")
     .insert({
@@ -59,7 +64,8 @@ export async function registerPhoto(input: unknown): Promise<{ photo?: Photo; er
     .select(PHOTO_COLUMNS)
     .single();
   if (error || !data) {
-    await destroyAssets([publicId]);
+    // A duplicate means the file already belongs to a photo: keep it.
+    if (error?.code !== "23505") await destroyAssets([publicId]);
     return { error: "That photo couldn't be saved. Try again." };
   }
   return { photo: toPhotos([data as PhotoRow])[0] };

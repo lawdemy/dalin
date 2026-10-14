@@ -1,6 +1,7 @@
 import imageCompression from "browser-image-compression";
 import exifr from "exifr";
 import { getUploadTicket, registerPhoto } from "@/app/admin/entries/actions";
+import { getAvatarUploadTicket, setAvatar } from "@/app/admin/settings/actions";
 import type { Photo } from "@/lib/images";
 
 /*
@@ -57,9 +58,26 @@ async function readTakenAt(file: File): Promise<string | null> {
   }
 }
 
-async function reencode(file: File): Promise<File> {
+/** Profile photo: same EXIF-free re-encode, smaller, no photos row. */
+export async function uploadAvatar(file: File, onProgress: (percent: number) => void) {
+  if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
+    throw new UploadError(`${file.name} isn't a photo.`);
+  }
+  const encoded = await reencode(file, 1024);
+  onProgress(10);
+  const ticket = await getAvatarUploadTicket();
+  const form = new FormData();
+  for (const [key, value] of Object.entries(ticket.fields)) form.append(key, value);
+  form.append("file", encoded, encoded.type === "image/webp" ? "avatar.webp" : "avatar.jpg");
+  await postWithProgress(ticket.url, form, (p) => onProgress(10 + Math.round(p * 85)));
+  const result = await setAvatar(ticket.publicId);
+  if (result.error) throw new UploadError(result.error);
+  onProgress(100);
+}
+
+async function reencode(file: File, maxEdge = MAX_EDGE): Promise<File> {
   const options = {
-    maxWidthOrHeight: MAX_EDGE,
+    maxWidthOrHeight: maxEdge,
     initialQuality: QUALITY,
     maxSizeMB: 1.5,
     useWebWorker: true,

@@ -7,6 +7,8 @@ export type LibraryPhoto = Photo & {
   inGallery: boolean;
   onAbout: boolean;
   isHero: boolean;
+  /** Position in the About grid (lower first), when onAbout. */
+  aboutSortOrder: number | null;
   createdAt: string;
   entry: { id: string; title: string; visibility: "private" | "public" } | null;
 };
@@ -25,7 +27,7 @@ export async function getPhotoLibrary(): Promise<PhotoLibrary> {
     db
       .from("photos")
       .select(
-        `${PHOTO_COLUMNS}, is_public, show_on_about, created_at, entry:entries!photos_entry_id_fkey(id, title, visibility)`,
+        `${PHOTO_COLUMNS}, is_public, show_on_about, about_sort_order, created_at, entry:entries!photos_entry_id_fkey(id, title, visibility)`,
       )
       .order("created_at", { ascending: false })
       .limit(LIMIT),
@@ -38,6 +40,7 @@ export async function getPhotoLibrary(): Promise<PhotoLibrary> {
   type Row = PhotoRow & {
     is_public: boolean;
     show_on_about: boolean;
+    about_sort_order: number | null;
     created_at: string;
     entry: LibraryPhoto["entry"] | LibraryPhoto["entry"][];
   };
@@ -51,6 +54,7 @@ export async function getPhotoLibrary(): Promise<PhotoLibrary> {
       inGallery: r.is_public,
       onAbout: r.show_on_about,
       isHero: r.id === heroId,
+      aboutSortOrder: r.about_sort_order,
       createdAt: r.created_at,
       entry: (Array.isArray(r.entry) ? r.entry[0] : r.entry) ?? null,
     })),

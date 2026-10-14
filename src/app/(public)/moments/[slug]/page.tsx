@@ -3,10 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { PhotoGrid } from "@/components/public/photo-grid";
+import { PhotoGrid, ViewablePhoto } from "@/components/public/photo-grid";
 import { RichText } from "@/components/rich-text/rich-text";
 import { Tag } from "@/components/ui/chip";
-import { CloudImage } from "@/components/ui/cloud-image";
 import { categoryLabel, formatEntryDate, moodInfo } from "@/lib/format";
 import { getMoment, getSiteSettings } from "@/lib/queries/public";
 import { shareMetadata } from "@/lib/metadata";
@@ -83,17 +82,16 @@ async function MomentContent({ slug }: { slug: string }) {
 
         {moment.cover && (
           <div className="mx-auto w-full max-w-180 md:px-6">
-            <div className="relative h-75 overflow-hidden bg-tone-2 md:h-105 md:rounded-xl">
-              <CloudImage
-                sources={moment.cover.sources}
-                blurDataUrl={moment.cover.blurDataUrl}
-                alt={moment.cover.alt}
-                fill
-                priority
-                sizes="(min-width: 768px) 672px, 100vw"
-                className="object-cover"
-              />
-            </div>
+            <ViewablePhoto
+              photos={moment.photos}
+              index={Math.max(
+                0,
+                moment.photos.findIndex((p) => p.id === moment.cover!.id),
+              )}
+              priority
+              sizes="(min-width: 768px) 672px, 100vw"
+              className="h-75 bg-tone-2 md:h-105 md:rounded-xl"
+            />
           </div>
         )}
 
