@@ -4,9 +4,16 @@ import Link from "next/link";
 import { MomentCard } from "@/components/public/moment-card";
 import { PhotoGrid } from "@/components/public/photo-grid";
 import { Eyebrow, SectionHeading } from "@/components/public/section-heading";
+import { WeddingBanner } from "@/components/public/wedding-banner";
 import { buttonClasses } from "@/components/ui/button";
 import { CloudImage } from "@/components/ui/cloud-image";
-import { getGalleryPhotos, getHeroPhoto, getMoments, getSiteSettings } from "@/lib/queries/public";
+import {
+  getGalleryPhotos,
+  getHeroPhoto,
+  getMoments,
+  getSiteSettings,
+  getWeddingBannerPhoto,
+} from "@/lib/queries/public";
 import { shareMetadata } from "@/lib/metadata";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,11 +26,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [settings, hero, latest, gallery] = await Promise.all([
+  const [settings, hero, latest, gallery, weddingPhoto] = await Promise.all([
     getSiteSettings(),
     getHeroPhoto(),
     getMoments(1, 3),
     getGalleryPhotos(0, 6),
+    getWeddingBannerPhoto(),
   ]);
   const [featured, ...more] = latest.moments;
 
@@ -59,6 +67,8 @@ export default async function HomePage() {
           </p>
         )}
       </section>
+
+      <WeddingBanner coupleNames={settings.coupleNames} photo={weddingPhoto} />
 
       {featured && (
         <section

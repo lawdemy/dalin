@@ -1,7 +1,7 @@
 import { addDays, differenceInCalendarMonths, format, parseISO } from "date-fns";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { DailyWordCard } from "@/components/admin/daily-word";
+import { DailyWords } from "@/components/admin/daily-word";
 import { AdminEntryCard } from "@/components/admin/entry-card";
 import { NEW_ENTRY_HREF } from "@/components/admin/nav-items";
 import { NotesPanel } from "@/components/admin/notes-panel";
@@ -10,9 +10,9 @@ import { buttonClasses } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireMember } from "@/lib/auth";
 import { signedSources } from "@/lib/cloudinary";
-import { wordForDay } from "@/lib/daily-words";
+import { wordsForDay } from "@/lib/daily-words";
 import { greetingInDiary, longTodayInDiary, todayInDiary } from "@/lib/format";
-import { listEntries, type EntryListItem } from "@/lib/queries/entries";
+import { listAuthors, listEntries, type EntryListItem } from "@/lib/queries/entries";
 import { getDashboardNotes } from "@/lib/queries/notes";
 
 /** How many entries the dashboard shows before pointing to the Timeline. */
@@ -24,6 +24,9 @@ export default async function DashboardPage() {
     listEntries({ limit: LIMIT }),
     getDashboardNotes(),
   ]);
+  // The second of us (by account age) gets the other half of each list.
+  const authors = await listAuthors();
+  const viewer = authors.findIndex((a) => a.id === member.id) === 1 ? 1 : 0;
 
   const now = new Date();
   const today = todayInDiary(now);
@@ -50,7 +53,7 @@ export default async function DashboardPage() {
       </header>
 
       <section aria-label="For you today" className="flex flex-col gap-3">
-        <DailyWordCard word={wordForDay(today)} />
+        <DailyWords words={wordsForDay(today, viewer)} />
         <NotesPanel notes={notes} today={today} tomorrow={tomorrow} />
         {notes.setupNeeded && (
           <p className="text-caption text-muted">

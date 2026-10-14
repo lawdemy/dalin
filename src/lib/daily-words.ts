@@ -2,8 +2,8 @@
  * The "word for today" on the dashboard: one per day, the same for both of
  * us, changing at midnight in Lagos. Scripture is the King James Version and
  * the literary lines are from public-domain classics; unattributed lines were
- * written for this diary. Days alternate between scripture and the other
- * kinds, each in a fixed shuffled order, so nothing repeats for 92 days.
+ * written for this diary. Each of us gets one word of every kind each day,
+ * and the two of us always see different ones (see wordsForDay).
  */
 
 export type WordKind = "Scripture" | "Love" | "Romance" | "Faith" | "Motivation";
@@ -365,6 +365,191 @@ export const DAILY_WORDS: DailyWord[] = [
   { kind: "Faith", text: "God's timing is not late. Wait with hope, together." },
   { kind: "Motivation", text: "Be each other's safe place and each other's biggest push." },
   { kind: "Motivation", text: "Progress, not perfection. Look how far you've come together." },
+
+  // More of each kind, so each of us has a month or more before repeats ----------------
+  { kind: "Love", text: "Notice one thing they do for you today, and say it out loud." },
+  { kind: "Love", text: "Love grows where it is watered. Water it today with patience." },
+  { kind: "Love", text: "Make their coffee or tea the way they like it, without being asked." },
+  { kind: "Love", text: "Put your phones down at dinner tonight and just talk." },
+  { kind: "Love", text: "The safest place in the world is a kind word at the end of a long day." },
+  { kind: "Love", text: "Choose curiosity over criticism today. Ask before you assume." },
+  {
+    kind: "Love",
+    text: "Send a message in the middle of the day that simply says: thinking of you.",
+  },
+  { kind: "Love", text: "Forgive quickly. Let nothing sleep between you tonight." },
+  {
+    kind: "Love",
+    text: "Celebrate what they are good at, especially if it isn't what you are good at.",
+  },
+  {
+    kind: "Love",
+    text: "Love is patient in traffic, in queues, and in the kitchen when dinner is late.",
+  },
+  { kind: "Love", text: "Ask how you can make their day lighter, then do it." },
+  {
+    kind: "Love",
+    text: "Laugh at the same silly thing twice. Shared jokes are love's secret language.",
+  },
+  { kind: "Love", text: "Speak well of them when they are not in the room." },
+  {
+    kind: "Love",
+    text: "Hug for a little longer than usual today. Twenty seconds is the magic number.",
+  },
+  { kind: "Love", text: "Be the first to say good morning and the last to say good night." },
+  { kind: "Love", text: "Protect your time together the way you protect anything precious." },
+  { kind: "Love", text: "Tell them about a moment this week when you felt proud of them." },
+  {
+    kind: "Love",
+    text: "Love remembers the little things: the favourite song, the shoe size, the bad day last Tuesday.",
+  },
+  { kind: "Love", text: "Two hearts, one team. Face today's problem together, not each other." },
+  { kind: "Love", text: "Your love is a home you build every day, one kind brick at a time." },
+  { kind: "Romance", text: "You are still the first person I want to tell good news to." },
+  { kind: "Romance", text: "I'd choose you in every crowd, in every city, in every lifetime." },
+  {
+    kind: "Romance",
+    text: "Kiss them goodbye today like you mean it, even if it's only for a few hours.",
+  },
+  {
+    kind: "Romance",
+    text: "Recreate a photo from your early days together and laugh at how young you were.",
+  },
+  {
+    kind: "Romance",
+    text: "Tonight, light a candle, play your song, and forget the dishes for an hour.",
+  },
+  {
+    kind: "Romance",
+    text: "Write three words that describe them on a sticky note and leave it on the mirror.",
+  },
+  {
+    kind: "Romance",
+    text: "Falling in love was easy. Staying in love is the beautiful work of every day.",
+  },
+  { kind: "Romance", text: "Wear something they love seeing you in, just because." },
+  { kind: "Romance", text: "Plan a surprise, however small. Romance lives in the unexpected." },
+  { kind: "Romance", text: "Tell them the moment you knew. They'll never tire of hearing it." },
+  { kind: "Romance", text: "Take the long way home together tonight." },
+  {
+    kind: "Romance",
+    text: "Make a playlist of songs that remind you of each other and play it on the next drive.",
+  },
+  {
+    kind: "Romance",
+    text: "Look at them like you did on your first date. They're still that person, and more.",
+  },
+  {
+    kind: "Romance",
+    text: "Cook something together tonight, even if it's only jollof and laughter.",
+  },
+  {
+    kind: "Romance",
+    text: "Hold their face in your hands and tell them they're beautiful. Mean every word.",
+  },
+  {
+    kind: "Romance",
+    text: "Some love stories are poetry. Ours is a whole book, and we're still writing it.",
+  },
+  {
+    kind: "Faith",
+    text: "God is not finished with you, and He is not finished with your story together.",
+  },
+  {
+    kind: "Faith",
+    text: "Pray about the small things today. Nothing that matters to you is too small for Him.",
+  },
+  { kind: "Faith", text: "Faith is trusting the next step when you can't yet see the staircase." },
+  { kind: "Faith", text: "Count your blessings out loud together tonight. Start with each other." },
+  { kind: "Faith", text: "When the road is uncertain, hold His hand and each other's." },
+  {
+    kind: "Faith",
+    text: "Peace is not the absence of storms but the presence of God in the boat.",
+  },
+  {
+    kind: "Faith",
+    text: "Read one verse together today and talk about what it means for you two.",
+  },
+  {
+    kind: "Faith",
+    text: "Thank God for the gift of each other before you ask Him for anything else.",
+  },
+  { kind: "Faith", text: "Your marriage is a ministry. Let your love point people to His love." },
+  { kind: "Faith", text: "When you can't trace His hand, trust His heart." },
+  { kind: "Faith", text: "Worship in the kitchen, pray in the car, praise in the waiting." },
+  {
+    kind: "Faith",
+    text: "Every good thing in your life came from His hands. Say thank you today.",
+  },
+  { kind: "Faith", text: "Let today's decisions be made on your knees first." },
+  { kind: "Faith", text: "The God who brought you together will keep you together." },
+  { kind: "Faith", text: "Pray a blessing over each other before you leave the house today." },
+  { kind: "Faith", text: "Hope in God is never wasted. Hold on, together." },
+  {
+    kind: "Faith",
+    text: "Seek first His kingdom today, and watch everything else fall into place.",
+  },
+  { kind: "Faith", text: "Fast from complaints today: replace each one with gratitude." },
+  {
+    kind: "Faith",
+    text: "God hears the prayers you whisper and the ones you can't put into words.",
+  },
+  { kind: "Faith", text: "Build your home on the Rock, and the storms will not move you." },
+  {
+    kind: "Faith",
+    text: "His mercy met you this morning, fresh and full. Share it with each other.",
+  },
+  {
+    kind: "Faith",
+    text: "Where two agree in prayer, heaven pays attention. Agree on something today.",
+  },
+  {
+    kind: "Motivation",
+    text: "Today is a fresh page. Write something you'll be glad to read later.",
+  },
+  {
+    kind: "Motivation",
+    text: "The goal isn't to be perfect together. It's to keep growing together.",
+  },
+  {
+    kind: "Motivation",
+    text: "Do one hard thing first today. Everything after will feel lighter.",
+  },
+  {
+    kind: "Motivation",
+    text: "Your dreams are valid. Pick one and take a single step towards it before noon.",
+  },
+  { kind: "Motivation", text: "Discipline is choosing what you want most over what you want now." },
+  {
+    kind: "Motivation",
+    text: "Save something today, even a little. Your future selves will thank you.",
+  },
+  { kind: "Motivation", text: "Be kind to yourself today. You're doing better than you think." },
+  {
+    kind: "Motivation",
+    text: "Nothing great was built in a day, but every great thing was built daily.",
+  },
+  { kind: "Motivation", text: "Plan your week together on Sunday night. Teams that plan, win." },
+  { kind: "Motivation", text: "Your mindset is your morning's first decision. Choose hope." },
+  { kind: "Motivation", text: "Learn one new thing today and teach it to each other tonight." },
+  { kind: "Motivation", text: "Comparison steals joy. Run your own race, side by side." },
+  { kind: "Motivation", text: "Hard seasons build strong roots. Keep going." },
+  {
+    kind: "Motivation",
+    text: "Finish what you started yesterday. Momentum is a gift you give yourself.",
+  },
+  { kind: "Motivation", text: "Drink water, move your body, say a kind word. Simple wins add up." },
+  { kind: "Motivation", text: "You two are stronger than whatever today brings." },
+  {
+    kind: "Motivation",
+    text: "Write down three things you want this year. Read them to each other.",
+  },
+  {
+    kind: "Motivation",
+    text: "Courage doesn't mean no fear. It means moving forward hand in hand anyway.",
+  },
+  { kind: "Motivation", text: "Turn 'someday' into a date on the calendar." },
+  { kind: "Motivation", text: "Rest well tonight. Tomorrow needs the best of you both." },
 ];
 
 /** Days since 1 Jan 2026 for a yyyy-mm-dd date (calendar days, no time zone drift). */
@@ -396,26 +581,33 @@ function shuffled<T>(items: T[], seed: number): T[] {
   return out;
 }
 
-/** Scripture and the other kinds alternate day by day; any extras go at the end. */
-const ORDER: DailyWord[] = (() => {
-  const scripture = shuffled(
-    DAILY_WORDS.filter((w) => w.kind === "Scripture"),
-    20261014,
-  );
-  const others = shuffled(
-    DAILY_WORDS.filter((w) => w.kind !== "Scripture"),
-    14102026,
-  );
-  const out: DailyWord[] = [];
-  for (let i = 0; i < Math.max(scripture.length, others.length); i++) {
-    if (scripture[i]) out.push(scripture[i]);
-    if (others[i]) out.push(others[i]);
-  }
-  return out;
-})();
+export const WORD_KINDS: WordKind[] = ["Scripture", "Romance", "Love", "Faith", "Motivation"];
 
-/** The word for a given diary date (yyyy-mm-dd). Same date, same word. */
-export function wordForDay(date: string): DailyWord {
-  const n = ORDER.length;
-  return ORDER[((dayNumber(date) % n) + n) % n];
+/** Each kind in its own fixed shuffled order. */
+const BY_KIND = Object.fromEntries(
+  WORD_KINDS.map((kind, i) => [
+    kind,
+    shuffled(
+      DAILY_WORDS.filter((w) => w.kind === kind),
+      20261014 + i * 7919,
+    ),
+  ]),
+) as Record<WordKind, DailyWord[]>;
+
+/**
+ * One word of every kind for a diary date (yyyy-mm-dd) and viewer.
+ * Each viewer walks the whole list for a kind, one step a day, so nothing
+ * repeats for them until it has all been shown. The second viewer starts
+ * half-way round, so on any day the two of us see different words.
+ */
+export function wordsForDay(date: string, viewer: 0 | 1): Record<WordKind, DailyWord> {
+  const day = dayNumber(date);
+  return Object.fromEntries(
+    WORD_KINDS.map((kind) => {
+      const list = BY_KIND[kind];
+      const n = list.length;
+      const offset = viewer === 1 ? Math.floor(n / 2) : 0;
+      return [kind, list[(((day + offset) % n) + n) % n]];
+    }),
+  ) as Record<WordKind, DailyWord>;
 }

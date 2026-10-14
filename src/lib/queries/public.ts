@@ -129,6 +129,36 @@ export async function getHeroPhoto(): Promise<Photo | null> {
   return photo ?? null;
 }
 
+/**
+ * A photo for the "wedding coming soon" banner. The anonymous query only
+ * returns public photos (RLS), so a private photo can never be picked.
+ * Preference: landscape, then About photos, then gallery, then photos from
+ * public moments; never the hero, so the home page doesn't repeat itself.
+ */
+export async function getWeddingBannerPhoto(): Promise<Photo | null> {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 900, expire: 3000 });
+  cacheTag(PUBLIC_TAG);
+
+  const db = createPublicClient();
+  if (!db) return null;
+  const { heroPhotoId } = await getSiteSettings();
+
+  const { data, error } = await db
+    .from("photos")
+    .select(`${PHOTO_COLUMNS}, show_on_about, is_public, created_at`)
+    .order("created_at", { ascending: false })
+    .limit(60);
+  if (error) throw new Error(`Couldn't load a banner photo: ${error.message}`);
+
+  type Row = PhotoRow & { show_on_about: boolean; is_public: boolean };
+  const score = (r: Row) =>
+    (r.width > r.height ? 4 : 0) + (r.show_on_about ? 2 : 0) + (r.is_public ? 1 : 0);
+  const candidates = ((data ?? []) as Row[]).filter((r) => r.id !== heroPhotoId);
+  const best = candidates.sort((a, b) => score(b) - score(a))[0];
+  return best ? toPhotos([best])[0] : null;
+}
+
 export async function getAboutPhotos(): Promise<Photo[]> {
   "use cache";
   cacheLife({ stale: 300, revalidate: 900, expire: 3000 });
