@@ -2,6 +2,7 @@ import "server-only";
 import { requireMember } from "@/lib/auth";
 import type { Category, Mood } from "@/lib/constants";
 import { PHOTO_COLUMNS, toPhotos, type Photo, type PhotoRow } from "@/lib/images";
+import { commentCounts } from "@/lib/queries/comments";
 import { createClient } from "@/lib/supabase/server";
 import type { TiptapDoc } from "@/components/rich-text/rich-text";
 
@@ -96,6 +97,7 @@ export type EntryListItem = {
   authorId: string;
   authorName: string;
   cover: Photo | null;
+  commentCount: number;
 };
 
 export type Author = { id: string; name: string };
@@ -162,6 +164,8 @@ export async function listEntries(
     toPhotos(chosen).forEach((p, i) => covers.set(chosen[i].entry_id, p));
   }
 
+  const counts = await commentCounts(rows.map((r) => r.id));
+
   return {
     hasMore: (data ?? []).length > limit,
     entries: rows.map((r) => {
@@ -176,6 +180,7 @@ export async function listEntries(
         authorId: r.author_id,
         authorName: author?.display_name ?? "",
         cover: covers.get(r.id) ?? null,
+        commentCount: counts.get(r.id) ?? 0,
       };
     }),
   };

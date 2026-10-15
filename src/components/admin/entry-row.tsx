@@ -1,3 +1,4 @@
+import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { CloudImage } from "@/components/ui/cloud-image";
@@ -45,6 +46,15 @@ export function EntryRow({ entry, dateLabel, altTone, index = 0, className }: En
             <Avatar name={entry.authorName} size="xs" tone={altTone ? "b" : "a"} />
           )}
           {dateLabel} · {categoryLabel(entry.category)}
+          {entry.commentCount > 0 && (
+            <span
+              className="ml-1 flex items-center gap-0.5"
+              aria-label={`${entry.commentCount} comments`}
+            >
+              <MessageCircle aria-hidden className="size-3.5" strokeWidth={1.8} />
+              {entry.commentCount}
+            </span>
+          )}
         </span>
       </div>
       <VisibilityBadge visibility={entry.visibility} compact />

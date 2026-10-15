@@ -283,6 +283,10 @@ DaLin/
 - **Calendar "Write about it"** opens `/admin/entries/new?date=yyyy-mm-dd`.
 - **Admin read view** at `/admin/entries/[id]`, editor at `/admin/entries/new` and `/admin/entries/[id]/edit`. Tab bar hidden in the editor (the save bar replaces it). "Today" uses `Africa/Lagos`.
 - **Either partner may edit or delete the other's entries.**
+- **Comments** (migration 0007, `comments`): unlimited, members only (never public, even on public moments); each person edits or deletes only their own; deleting an entry deletes its comments (on delete cascade). Shown under each entry at `/admin/entries/[id]`, with counts on dashboard cards and timeline rows.
+- **Personal notes** (migration 0006, `notes`): written for the other person and shown on their dashboard from the chosen morning (`deliver_on`, Lagos date); RLS hides them from the recipient until then.
+- **Daily words** (`src/lib/daily-words.ts`): each person gets one Scripture (KJV), Romance, Love, Faith and Motivation message every morning, different from the other's.
+- **Wedding banner** on the public home page: "coming soon", no date, over a photo that is already public.
 
 ## Open questions (fill in when known)
 

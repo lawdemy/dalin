@@ -200,7 +200,7 @@ export function EntryForm({ entry, today }: EntryFormProps) {
               “{entry.title}”
               {entry.photos.length > 0 &&
                 ` and its ${entry.photos.length} photo${entry.photos.length === 1 ? "" : "s"}`}{" "}
-              will be deleted for good.
+              will be deleted for good, along with all its comments.
             </>
           }
           onConfirm={async () => {

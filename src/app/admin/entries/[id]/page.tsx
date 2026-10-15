@@ -2,6 +2,7 @@ import { ArrowLeft, Calendar, ExternalLink, MapPin, Pencil, UserRound } from "lu
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Comments } from "@/components/admin/comments";
 import { PhotoGrid, ViewablePhoto } from "@/components/public/photo-grid";
 import { RichText } from "@/components/rich-text/rich-text";
 import { buttonClasses } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Tag } from "@/components/ui/chip";
 import { EmptyState } from "@/components/ui/empty-state";
 import { VisibilityBadge } from "@/components/ui/visibility-badge";
 import { categoryLabel, formatEntryDate, moodInfo } from "@/lib/format";
+import { requireMember } from "@/lib/auth";
+import { getComments } from "@/lib/queries/comments";
 import { getEntry } from "@/lib/queries/entries";
 import { isEmptyDoc } from "@/components/rich-text/rich-text";
 
@@ -19,6 +22,10 @@ export default async function EntryPage({ params }: PageProps<"/admin/entries/[i
   const { id } = await params;
   const entry = await getEntry(id); // checks membership
   if (!entry) notFound();
+  const [me, { comments, setupNeeded }] = await Promise.all([
+    requireMember(),
+    getComments(entry.id),
+  ]);
 
   const mood = moodInfo(entry.mood);
   const cover = entry.photos.find((p) => p.id === entry.coverPhotoId) ?? entry.photos[0];
@@ -110,6 +117,7 @@ export default async function EntryPage({ params }: PageProps<"/admin/entries/[i
           <PhotoGrid photos={entry.photos} layout="entry" />
         </section>
       )}
+      <Comments entryId={entry.id} comments={comments} meId={me.id} setupNeeded={setupNeeded} />
     </article>
   );
 }

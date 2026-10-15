@@ -1,4 +1,4 @@
-import { ImageOff } from "lucide-react";
+import { ImageOff, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { ViewablePhoto } from "@/components/public/photo-grid";
 import { placeholderTone } from "@/components/ui/photo-tile";
@@ -54,7 +54,15 @@ export function AdminEntryCard({ entry, index = 0, note }: EntryCardProps) {
           {mood && ` · ${mood.emoji}`}
         </span>
         <span className="font-serif text-card leading-tight font-semibold">{entry.title}</span>
-        {entry.authorName && <span className="text-caption text-muted">by {entry.authorName}</span>}
+        <span className="flex items-center justify-between gap-2 text-caption text-muted">
+          {entry.authorName ? <span>by {entry.authorName}</span> : <span />}
+          {entry.commentCount > 0 && (
+            <span className="flex items-center gap-1" aria-label={`${entry.commentCount} comments`}>
+              <MessageCircle aria-hidden className="size-3.5" strokeWidth={1.8} />
+              {entry.commentCount}
+            </span>
+          )}
+        </span>
       </Link>
     </article>
   );
