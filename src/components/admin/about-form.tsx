@@ -89,7 +89,7 @@ export function AboutForm({ settings, photos }: AboutFormProps) {
         save();
       }}
       noValidate
-      className="mx-auto flex w-full max-w-180 flex-col gap-8 pb-28"
+      className="mx-auto flex w-full max-w-180 flex-col gap-8"
     >
       <div className="flex flex-col gap-1">
         <h1 className="text-title">About Us editor</h1>
@@ -193,7 +193,7 @@ export function AboutForm({ settings, photos }: AboutFormProps) {
 
       <AboutPhotos photos={photos} />
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand bg-ivory px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)] md:sticky md:-mx-6 md:px-6">
+      <div className="sticky bottom-0 z-20 -mx-5 border-t border-sand bg-ivory px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)] md:-mx-6 md:px-6">
         <div className="mx-auto flex max-w-180 flex-col gap-2">
           <p aria-live="polite" className="text-center text-caption text-muted empty:hidden">
             {result.ok ? "Saved. The public site updates within a few seconds." : ""}

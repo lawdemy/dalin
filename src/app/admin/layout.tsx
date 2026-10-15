@@ -14,7 +14,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <div className="flex min-h-dvh flex-col">
       <AdminHeader />
-      <main className="mx-auto w-full max-w-300 flex-1 px-5 pt-8 pb-[calc(140px+env(safe-area-inset-bottom))] md:px-6 md:pb-16">
+      <main className="mx-auto w-full max-w-300 flex-1 px-5 pt-8 pb-10 md:px-6 md:pb-16">
         <Suspense fallback={<AdminLoading />}>
           <MembersOnly>{children}</MembersOnly>
         </Suspense>

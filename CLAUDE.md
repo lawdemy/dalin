@@ -50,7 +50,7 @@ Follows the prototype (`DESIGN.md`). Tokens live in `src/app/globals.css`; compo
   - `accent-dark` `#9C5F54`: buttons, links, active states. Hover/pressed: `accent-deep` `#844E45`.
   - Supporting tokens (borders, tints, danger, lightbox, photo placeholders) are in `globals.css`.
 - **Type:** Cormorant Garamond (500/600, italic for quotes) for headings and names, Inter (400/500/600) for body and UI. Body text 16px minimum on mobile. Size tokens: `text-title` 40 / `text-title-lg` 56, `text-section` 28 / `text-section-lg` 36, `text-caption` 13 and others in `globals.css`.
-- **Mobile:** bottom tab bar in admin (Home · Timeline · **+ New** · Photos · More; More holds Calendar, About editor, Settings, Sign out). Tap targets at least 44px. Sticky save bar on the entry editor. Photo picker uses `accept="image/*"` with multiple selection.
+- **Mobile:** bottom tab bar in admin (Home · Timeline · **+ New** · Photos · More; More holds Calendar, About editor, Settings, Sign out). Tap targets at least 44px. Sticky save bar on the entry editor. **Bottom bars (tab bar, save bars) use `position: sticky`, never `fixed`:** fixed bars float mid-screen in iOS Safari when its toolbars slide; sticky stays put in every browser. Photo picker uses `accept="image/*"` with multiple selection.
 - **Desktop admin:** navigation in the top header for now (the PRD's left sidebar is not designed yet).
 - **Dark mode:** not in v1. Keep colours as tokens so it can be added later.
 

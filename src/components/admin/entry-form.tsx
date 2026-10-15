@@ -102,7 +102,7 @@ export function EntryForm({ entry, today }: EntryFormProps) {
         save();
       }}
       noValidate
-      className="mx-auto flex w-full max-w-180 flex-col gap-6 pb-28"
+      className="mx-auto flex w-full max-w-180 flex-col gap-6"
     >
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-section md:text-section-lg">{entry ? "Edit entry" : "New entry"}</h1>
@@ -222,7 +222,7 @@ export function EntryForm({ entry, today }: EntryFormProps) {
       )}
 
       {/* Sticky save bar; the tab bar is hidden on editor pages. */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand bg-ivory px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)] md:sticky md:-mx-6 md:px-6">
+      <div className="sticky bottom-0 z-20 -mx-5 border-t border-sand bg-ivory px-5 pt-3 pb-[max(env(safe-area-inset-bottom),16px)] md:-mx-6 md:px-6">
         <div className="mx-auto max-w-180">
           <Button type="submit" size="lg" fullWidth pending={saving} disabled={uploading}>
             {uploading

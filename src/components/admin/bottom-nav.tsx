@@ -42,7 +42,7 @@ function TabBar({ pathname }: { pathname: string | null }) {
     <>
       <nav
         aria-label="Diary"
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-sand bg-ivory pb-[max(env(safe-area-inset-bottom),8px)] md:hidden"
+        className="sticky bottom-0 z-20 border-t border-sand bg-ivory pb-[max(env(safe-area-inset-bottom),8px)] md:hidden"
       >
         <div className="grid h-16 grid-cols-5 items-center px-2">
           <Tab item={home} active={isActive(pathname, home.href)} />
