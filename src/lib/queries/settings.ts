@@ -66,3 +66,16 @@ export async function getSettings(): Promise<{ momentsEnabled: boolean; profiles
     profiles: [...list.filter((p) => p.isMe), ...list.filter((p) => !p.isMe)],
   };
 }
+
+/** Whether the public Moments feed is switched on. Members only. */
+export async function getMomentsEnabled(): Promise<boolean> {
+  await requireMember();
+  const db = await createClient();
+  const { data, error } = await db
+    .from("site_settings")
+    .select("moments_enabled")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throw new Error(`Couldn't load settings: ${error.message}`);
+  return data?.moments_enabled === true;
+}

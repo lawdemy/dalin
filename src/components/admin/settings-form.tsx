@@ -53,10 +53,20 @@ export function SettingsForm({ momentsEnabled, profiles }: SettingsFormProps) {
 function PublicSiteSection({ momentsEnabled }: { momentsEnabled: boolean }) {
   const router = useRouter();
   const [on, setOn] = useState(momentsEnabled);
+  const [confirmingOff, setConfirmingOff] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
 
+  // Turning Moments off hides every public entry, so it asks first;
+  // turning it back on is a single tap.
+  function request(next: boolean) {
+    setError(undefined);
+    if (next) toggle(true);
+    else setConfirmingOff(true);
+  }
+
   function toggle(next: boolean) {
+    setConfirmingOff(false);
     setOn(next);
     setError(undefined);
     startTransition(async () => {
@@ -76,9 +86,29 @@ function PublicSiteSection({ momentsEnabled }: { momentsEnabled: boolean }) {
         <Switch
           label="Show Moments on the public site"
           checked={on}
-          disabled={pending}
-          onCheckedChange={toggle}
+          disabled={pending || confirmingOff}
+          onCheckedChange={request}
         />
+        {confirmingOff && (
+          <div
+            role="alertdialog"
+            aria-label="Hide Moments?"
+            className="mb-3 flex flex-col gap-2 rounded-xl bg-rose-tint px-4 py-3"
+          >
+            <p className="text-label text-danger-text">
+              Hide Moments from visitors? The Moments page and its menu link disappear, and public
+              entries and their photos are hidden until you switch it back on.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="danger" size="sm" pending={pending} onClick={() => toggle(false)}>
+                Hide Moments
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmingOff(false)}>
+                Keep showing
+              </Button>
+            </div>
+          </div>
+        )}
         <p className="pb-3 text-caption text-muted">
           {on
             ? "Entries you mark Public appear under Moments and on the home page."

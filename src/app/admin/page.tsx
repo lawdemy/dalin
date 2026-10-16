@@ -1,5 +1,5 @@
 import { addDays, differenceInCalendarMonths, format, parseISO } from "date-fns";
-import { Plus } from "lucide-react";
+import { EyeOff, Plus } from "lucide-react";
 import Link from "next/link";
 import { DailyWords } from "@/components/admin/daily-word";
 import { AdminEntryCard } from "@/components/admin/entry-card";
@@ -14,15 +14,17 @@ import { wordsForDay } from "@/lib/daily-words";
 import { greetingInDiary, longTodayInDiary, todayInDiary } from "@/lib/format";
 import { listAuthors, listEntries, type EntryListItem } from "@/lib/queries/entries";
 import { getDashboardNotes } from "@/lib/queries/notes";
+import { getMomentsEnabled } from "@/lib/queries/settings";
 
 /** How many entries the dashboard shows before pointing to the Timeline. */
 const LIMIT = 500;
 
 export default async function DashboardPage() {
   const member = await requireMember();
-  const [{ entries, hasMore }, notes] = await Promise.all([
+  const [{ entries, hasMore }, notes, momentsEnabled] = await Promise.all([
     listEntries({ limit: LIMIT }),
     getDashboardNotes(),
+    getMomentsEnabled(),
   ]);
   // The second of us (by account age) gets the other half of each list.
   const authors = await listAuthors();
@@ -51,6 +53,21 @@ export default async function DashboardPage() {
           image={member.avatarPath ? signedSources(member.avatarPath, 256) : null}
         />
       </header>
+
+      {!momentsEnabled && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-rose-tint px-4 py-3 text-label text-danger-text"
+        >
+          <EyeOff aria-hidden className="size-4.5 shrink-0" strokeWidth={1.8} />
+          <span className="flex-1">
+            Moments is hidden from visitors, so public entries don&rsquo;t show on the site.
+          </span>
+          <Link href="/admin/settings" className="font-semibold text-danger-text underline">
+            Turn it on in Settings
+          </Link>
+        </div>
+      )}
 
       <section aria-label="For you today" className="flex flex-col gap-3">
         <DailyWords words={wordsForDay(today, viewer)} />
