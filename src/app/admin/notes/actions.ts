@@ -52,3 +52,31 @@ export async function deleteNote(id: string): Promise<NoteResult> {
   const { error } = await db.from("notes").delete().eq("id", id);
   return error ? { error: "Couldn't delete the note. Try again." } : {};
 }
+
+const replySchema = z
+  .string()
+  .trim()
+  .min(1, "Write your reply first.")
+  .max(1000, "Keep it under 1,000 characters.");
+
+/**
+ * Sends your one reply to a note written for you. The database allows a
+ * single reply per note, only from its recipient, and only once delivered.
+ */
+export async function replyToNote(id: string, reply: string): Promise<NoteResult> {
+  await requireMember();
+  if (!z.uuid().safeParse(id).success) return { error: "That note couldn't be found." };
+  const parsed = replySchema.safeParse(reply);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  const db = await createClient();
+  const { data, error } = await db
+    .from("notes")
+    .update({ reply: parsed.data })
+    .eq("id", id)
+    .select("id");
+  if (error?.message?.includes("already has a reply")) {
+    return { error: "You've already replied to this note." };
+  }
+  if (error || !data?.length) return { error: "Couldn't send your reply. Try again." };
+  return {};
+}

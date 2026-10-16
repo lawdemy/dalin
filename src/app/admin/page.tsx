@@ -57,7 +57,7 @@ export default async function DashboardPage() {
         <NotesPanel notes={notes} today={today} tomorrow={tomorrow} />
         {notes.setupNeeded && (
           <p className="text-caption text-muted">
-            Personal notes switch on once migration 0006 has been run in Supabase.
+            Personal notes switch on once migrations 0006 and 0008 have been run in Supabase.
           </p>
         )}
       </section>

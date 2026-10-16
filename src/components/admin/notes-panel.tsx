@@ -1,10 +1,10 @@
 "use client";
 
 import { format, parseISO } from "date-fns";
-import { Heart, PenLine, Trash2, X } from "lucide-react";
+import { Heart, MessageCircleHeart, PenLine, Reply, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, useTransition } from "react";
-import { deleteNote, saveNote } from "@/app/admin/notes/actions";
+import { deleteNote, replyToNote, saveNote } from "@/app/admin/notes/actions";
 import { Button } from "@/components/ui/button";
 import { describedBy, Field } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/input";
@@ -17,10 +17,12 @@ type NotesPanelProps = {
   tomorrow: string;
 };
 
-/** Today's notes from your partner, plus writing and scheduling your own. */
+/** Today's notes from your partner, replies to yours, and writing your own. */
 export function NotesPanel({ notes, today, tomorrow }: NotesPanelProps) {
   const { partner } = notes;
   if (!partner) return null;
+  const canReply = !notes.repliesUnavailable;
+
   return (
     <div className="flex flex-col gap-3">
       {notes.today.map((note) => (
@@ -36,6 +38,26 @@ export function NotesPanel({ notes, today, tomorrow }: NotesPanelProps) {
             {note.message}
           </blockquote>
           <p className="text-label font-medium text-danger-text">— {partner.name}</p>
+          {canReply && <ReplyBox note={note} partnerName={partner.name} />}
+        </figure>
+      ))}
+
+      {notes.recentReplies.map((note) => (
+        <figure
+          key={note.id}
+          className="flex flex-col gap-2 rounded-xl border border-rose-tint bg-ivory px-5 py-5 md:px-6"
+        >
+          <figcaption className="flex items-center gap-2 text-caption font-medium tracking-[1px] text-danger-text uppercase">
+            <MessageCircleHeart aria-hidden className="size-4" strokeWidth={2} />
+            {partner.name} replied to your note
+          </figcaption>
+          <p className="text-caption whitespace-pre-line text-muted">
+            You wrote: &ldquo;{excerpt(note.message)}&rdquo;
+          </p>
+          <blockquote className="font-serif text-quote leading-snug font-medium whitespace-pre-line">
+            {note.reply}
+          </blockquote>
+          <p className="text-label font-medium text-danger-text">— {partner.name}</p>
         </figure>
       ))}
 
@@ -47,14 +69,108 @@ export function NotesPanel({ notes, today, tomorrow }: NotesPanelProps) {
           scheduled={notes.scheduled}
         />
         {notes.earlier.length > 0 && (
-          <EarlierNotes partnerName={partner.name} notes={notes.earlier} />
+          <EarlierNotes partnerName={partner.name} notes={notes.earlier} canReply={canReply} />
         )}
+        {notes.sent.length > 0 && <SentNotes partnerName={partner.name} notes={notes.sent} />}
       </div>
     </div>
   );
 }
 
-function EarlierNotes({ partnerName, notes }: { partnerName: string; notes: Note[] }) {
+function excerpt(text: string, max = 120) {
+  return text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
+}
+
+/** Your one reply to a note written for you. Final once sent. */
+function ReplyBox({ note, partnerName }: { note: Note; partnerName: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [error, setError] = useState<string>();
+  const [pending, startTransition] = useTransition();
+
+  if (note.reply) {
+    return (
+      <div className="mt-1 rounded-xl bg-ivory/70 px-4 py-3">
+        <p className="text-caption font-medium text-muted">Your reply</p>
+        <p className="whitespace-pre-line">{note.reply}</p>
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setOpen(true)}
+        className="-ml-2 self-start text-danger-text hover:text-danger-text"
+      >
+        <Reply aria-hidden className="size-4.5" strokeWidth={1.8} />
+        Reply to {partnerName}
+      </Button>
+    );
+  }
+
+  function send() {
+    setError(undefined);
+    startTransition(async () => {
+      const res = await replyToNote(note.id, text);
+      if (res.error) setError(res.error);
+      else router.refresh();
+    });
+  }
+
+  const id = `reply-${note.id}`;
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        send();
+      }}
+      className="mt-1 flex flex-col gap-2"
+    >
+      <label htmlFor={id} className="text-label font-medium">
+        Your reply to {partnerName}
+      </label>
+      <Textarea
+        id={id}
+        rows={3}
+        maxLength={1000}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Write from the heart…"
+        className="bg-ivory font-serif text-quote"
+      />
+      <p className="text-caption text-muted">
+        You can reply once, and it can&rsquo;t be changed after sending.
+      </p>
+      {error && (
+        <p role="alert" className="text-caption text-danger-text">
+          {error}
+        </p>
+      )}
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" pending={pending} disabled={!text.trim()}>
+          Send reply
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={pending}>
+          Cancel
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function EarlierNotes({
+  partnerName,
+  notes,
+  canReply,
+}: {
+  partnerName: string;
+  notes: Note[];
+  canReply: boolean;
+}) {
   return (
     <details className="group w-full">
       <summary className="flex min-h-11 cursor-pointer list-none items-center text-label font-medium text-accent-dark">
@@ -62,11 +178,42 @@ function EarlierNotes({ partnerName, notes }: { partnerName: string; notes: Note
       </summary>
       <ul className="mt-1 flex flex-col gap-2">
         {notes.map((n) => (
-          <li key={n.id} className="rounded-xl bg-linen px-4 py-3">
+          <li key={n.id} className="flex flex-col gap-1 rounded-xl bg-linen px-4 py-3">
             <p className="whitespace-pre-line">{n.message}</p>
-            <p className="mt-1 text-caption text-muted">
+            <p className="text-caption text-muted">
               {format(parseISO(n.deliverOn), "EEE d MMM yyyy")}
             </p>
+            {canReply && <ReplyBox note={n} partnerName={partnerName} />}
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+function SentNotes({ partnerName, notes }: { partnerName: string; notes: Note[] }) {
+  const answered = notes.filter((n) => n.reply).length;
+  return (
+    <details className="group w-full">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center text-label font-medium text-accent-dark">
+        Notes you sent ({notes.length}
+        {answered > 0 && `, ${answered} answered`})
+      </summary>
+      <ul className="mt-1 flex flex-col gap-2">
+        {notes.map((n) => (
+          <li key={n.id} className="flex flex-col gap-1 rounded-xl bg-linen px-4 py-3">
+            <p className="whitespace-pre-line">{n.message}</p>
+            <p className="text-caption text-muted">
+              {format(parseISO(n.deliverOn), "EEE d MMM yyyy")}
+            </p>
+            {n.reply ? (
+              <div className="mt-1 rounded-xl bg-ivory px-4 py-3">
+                <p className="text-caption font-medium text-muted">{partnerName} replied</p>
+                <p className="whitespace-pre-line">{n.reply}</p>
+              </div>
+            ) : (
+              <p className="text-caption text-muted">No reply yet.</p>
+            )}
           </li>
         ))}
       </ul>
