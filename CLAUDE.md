@@ -64,6 +64,7 @@ Follows the prototype (`DESIGN.md`). Tokens live in `src/app/globals.css`; compo
 - `/about`: our story, how we met, engagement details, and a photo grid of us. All editable in admin.
 - `/gallery`: photos marked public, in a masonry grid with a lightbox.
 - `/moments`: feed of entries marked public (can be switched off in settings). `/moments/[slug]` shows a single public entry.
+- `/books`: our bookshelf, the books marked public, grouped Reading now / Finished / Up next, each with a "Get the book" link, a short quote and our thoughts.
 
 ### Private (login required)
 
@@ -76,6 +77,7 @@ Follows the prototype (`DESIGN.md`). Tokens live in `src/app/globals.css`; compo
 - `/admin/photos`: every photo, with toggles for "public in gallery", "show on About page" and "set as hero".
 - `/admin/about`: edit names, welcome line, story, how we met, and engagement details, and pick the hero photo.
 - `/admin/settings`: show or hide the Moments feed, site title, and each user's display name and avatar.
+- `/admin/books` (More → Bookshelf), `/admin/books/new`, `/admin/books/[id]` (with private reading notes) and `/admin/books/[id]/edit`.
 
 ---
 
@@ -285,7 +287,8 @@ DaLin/
 - **Either partner may edit or delete the other's entries.**
 - **Comments** (migration 0007, `comments`): unlimited, members only (never public, even on public moments); each person edits or deletes only their own; deleting an entry deletes its comments (on delete cascade). Shown under each entry at `/admin/entries/[id]`, with counts on dashboard cards and timeline rows.
 - **Personal notes** (migration 0006, `notes`): written for the other person and shown on their dashboard from the chosen morning (`deliver_on`, Lagos date); RLS hides them from the recipient until then. The recipient may send **one reply** per note (migration 0008), on or after delivery; it is final, and an answered note can no longer be edited by its author (enforced by the `guard_note_update` trigger).
-- **Daily words** (`src/lib/daily-words.ts`): each person gets one Scripture (KJV), Romance, Love, Faith and Motivation message every morning, different from the other's.
+- **Daily words** (`src/lib/daily-words.ts`): each person gets one Scripture (NIV, shown with Biblica's required notice; keep under 500 verses), Romance, Love, Faith and Motivation message every morning, different from the other's.
+- **Bookshelf** (migration 0009, `books` + `book_notes`): records the books we read together, never the books themselves. **No book files are uploaded or offered for download** (copyright; `*.pdf`/`*.epub` are git-ignored). Public books show title, author, an https buy link, a quote of a sentence or two (max 400 chars) and our reflection. Reading notes are members only; each person edits or deletes only their own.
 - **Wedding banner** on the public home page: "coming soon", no date, over a photo that is already public.
 
 ## Open questions (fill in when known)

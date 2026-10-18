@@ -9,6 +9,7 @@ export const PUBLIC_NAV = [
   { href: "/about", label: "About us" },
   { href: "/gallery", label: "Gallery" },
   { href: "/moments", label: "Moments" },
+  { href: "/books", label: "Bookshelf" },
 ] as const;
 
 // Labels for the entry_mood and entry_category enums (migration 0004).
@@ -36,3 +37,12 @@ export const CATEGORIES = [
 
 export type Mood = (typeof MOODS)[number]["value"];
 export type Category = (typeof CATEGORIES)[number]["value"];
+
+// Labels for the book_status enum (migration 0009), in shelf order.
+export const BOOK_STATUSES = [
+  { value: "reading", label: "Reading now" },
+  { value: "finished", label: "Finished" },
+  { value: "want_to_read", label: "Up next" },
+] as const;
+
+export type BookStatus = (typeof BOOK_STATUSES)[number]["value"];

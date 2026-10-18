@@ -3,6 +3,7 @@ import {
   Calendar,
   House,
   Image as ImageIcon,
+  Library,
   PenLine,
   Settings,
   type LucideIcon,
@@ -22,6 +23,7 @@ export const TAB_ITEMS: NavItem[] = [
 /** Inside the "More" sheet on phones. */
 export const MORE_ITEMS: NavItem[] = [
   { href: "/admin/calendar", label: "Calendar", icon: Calendar },
+  { href: "/admin/books", label: "Bookshelf", icon: Library },
   { href: "/admin/about", label: "About Us editor", icon: PenLine },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

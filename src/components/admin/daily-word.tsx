@@ -1,6 +1,6 @@
 import { BookOpen, Heart, HandHeart, Sparkles, Sunrise, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WORD_KINDS, type DailyWord, type WordKind } from "@/lib/daily-words";
+import { NIV_NOTICE, WORD_KINDS, type DailyWord, type WordKind } from "@/lib/daily-words";
 
 const KINDS: Record<WordKind, { label: string; icon: LucideIcon }> = {
   Scripture: { label: "Scripture for today", icon: BookOpen },
@@ -15,7 +15,10 @@ export function DailyWords({ words }: { words: Record<WordKind, DailyWord> }) {
   const [first, ...rest] = WORD_KINDS;
   return (
     <div className="flex flex-col gap-3">
-      <DailyWordCard word={words[first]} />
+      <div className="flex flex-col gap-1.5">
+        <DailyWordCard word={words[first]} />
+        <p className="px-1 text-micro leading-snug text-muted">{NIV_NOTICE}</p>
+      </div>
       <div className="grid gap-3 md:grid-cols-2">
         {rest.map((kind) => (
           <DailyWordCard key={kind} word={words[kind]} compact />
@@ -47,7 +50,12 @@ export function DailyWordCard({ word, compact = false }: { word: DailyWord; comp
       >
         &ldquo;{word.text}&rdquo;
       </blockquote>
-      {word.source && <p className="text-label font-medium text-accent-dark">{word.source}</p>}
+      {word.source && (
+        <p className="text-label font-medium text-accent-dark">
+          {word.source}
+          {word.kind === "Scripture" && " (NIV)"}
+        </p>
+      )}
     </figure>
   );
 }

@@ -1,6 +1,7 @@
 /*
  * The "word for today" on the dashboard: one per day, the same for both of
- * us, changing at midnight in Lagos. Scripture is the King James Version and
+ * us, changing at midnight in Lagos. Scripture is the New International Version
+ * (NIV, quoted under Biblica's 500-verse permission; see NIV_NOTICE) and
  * the literary lines are from public-domain classics; unattributed lines were
  * written for this diary. Each of us gets one word of every kind each day,
  * and the two of us always see different ones (see wordsForDay).
@@ -10,236 +11,240 @@ export type WordKind = "Scripture" | "Love" | "Romance" | "Faith" | "Motivation"
 
 export type DailyWord = { kind: WordKind; text: string; source?: string };
 
+/** Required by Biblica when quoting the NIV (up to 500 verses without written permission). */
+export const NIV_NOTICE =
+  "Scripture quotations taken from The Holy Bible, New International Version® NIV®. Copyright © 1973, 1978, 1984, 2011 by Biblica, Inc.™ Used by permission. All rights reserved worldwide.";
+
 export const DAILY_WORDS: DailyWord[] = [
   // Scripture (KJV) ---------------------------------------------------------------------
   {
     kind: "Scripture",
-    text: "It is of the LORD's mercies that we are not consumed, because his compassions fail not. They are new every morning: great is thy faithfulness.",
+    text: "Because of the LORD's great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.",
     source: "Lamentations 3:22–23",
   },
   {
     kind: "Scripture",
-    text: "This is the day which the LORD hath made; we will rejoice and be glad in it.",
+    text: "The LORD has done it this very day; let us rejoice today and be glad.",
     source: "Psalm 118:24",
   },
   {
     kind: "Scripture",
-    text: "Weeping may endure for a night, but joy cometh in the morning.",
+    text: "Weeping may stay for the night, but rejoicing comes in the morning.",
     source: "Psalm 30:5",
   },
   {
     kind: "Scripture",
-    text: "Cause me to hear thy lovingkindness in the morning; for in thee do I trust.",
+    text: "Let the morning bring me word of your unfailing love, for I have put my trust in you.",
     source: "Psalm 143:8",
   },
   {
     kind: "Scripture",
-    text: "My voice shalt thou hear in the morning, O LORD; in the morning will I direct my prayer unto thee, and will look up.",
+    text: "In the morning, LORD, you hear my voice; in the morning I lay my requests before you and wait expectantly.",
     source: "Psalm 5:3",
   },
   {
     kind: "Scripture",
-    text: "Charity suffereth long, and is kind; charity envieth not; charity vaunteth not itself, is not puffed up.",
+    text: "Love is patient, love is kind. It does not envy, it does not boast, it is not proud.",
     source: "1 Corinthians 13:4",
   },
   {
     kind: "Scripture",
-    text: "Beareth all things, believeth all things, hopeth all things, endureth all things. Charity never faileth.",
+    text: "It always protects, always trusts, always hopes, always perseveres. Love never fails.",
     source: "1 Corinthians 13:7–8",
   },
   {
     kind: "Scripture",
-    text: "And now abideth faith, hope, charity, these three; but the greatest of these is charity.",
+    text: "And now these three remain: faith, hope and love. But the greatest of these is love.",
     source: "1 Corinthians 13:13",
   },
   {
     kind: "Scripture",
-    text: "Let all your things be done with charity.",
+    text: "Do everything in love.",
     source: "1 Corinthians 16:14",
   },
   {
     kind: "Scripture",
-    text: "Two are better than one; because they have a good reward for their labour.",
+    text: "Two are better than one, because they have a good return for their labor.",
     source: "Ecclesiastes 4:9",
   },
   {
     kind: "Scripture",
-    text: "And if one prevail against him, two shall withstand him; and a threefold cord is not quickly broken.",
+    text: "Though one may be overpowered, two can defend themselves. A cord of three strands is not quickly broken.",
     source: "Ecclesiastes 4:12",
   },
   {
     kind: "Scripture",
-    text: "To every thing there is a season, and a time to every purpose under the heaven.",
+    text: "There is a time for everything, and a season for every activity under the heavens.",
     source: "Ecclesiastes 3:1",
   },
   {
     kind: "Scripture",
-    text: "Many waters cannot quench love, neither can the floods drown it.",
+    text: "Many waters cannot quench love; rivers cannot sweep it away.",
     source: "Song of Solomon 8:7",
   },
   {
     kind: "Scripture",
-    text: "Set me as a seal upon thine heart, as a seal upon thine arm: for love is strong as death.",
+    text: "Place me like a seal over your heart, like a seal on your arm; for love is as strong as death.",
     source: "Song of Solomon 8:6",
   },
   {
     kind: "Scripture",
-    text: "My beloved is mine, and I am his.",
+    text: "My beloved is mine and I am his.",
     source: "Song of Solomon 2:16",
   },
   {
     kind: "Scripture",
-    text: "I found him whom my soul loveth: I held him, and would not let him go.",
+    text: "I found the one my heart loves. I held him and would not let him go.",
     source: "Song of Solomon 3:4",
   },
   {
     kind: "Scripture",
-    text: "Thou art all fair, my love; there is no spot in thee.",
+    text: "You are altogether beautiful, my darling; there is no flaw in you.",
     source: "Song of Solomon 4:7",
   },
   {
     kind: "Scripture",
-    text: "Whither thou goest, I will go; and where thou lodgest, I will lodge: thy people shall be my people, and thy God my God.",
+    text: "Where you go I will go, and where you stay I will stay. Your people will be my people and your God my God.",
     source: "Ruth 1:16",
   },
   {
     kind: "Scripture",
-    text: "Whoso findeth a wife findeth a good thing, and obtaineth favour of the LORD.",
+    text: "He who finds a wife finds what is good and receives favor from the LORD.",
     source: "Proverbs 18:22",
   },
   {
     kind: "Scripture",
-    text: "Who can find a virtuous woman? for her price is far above rubies. The heart of her husband doth safely trust in her.",
+    text: "A wife of noble character who can find? She is worth far more than rubies. Her husband has full confidence in her and lacks nothing of value.",
     source: "Proverbs 31:10–11",
   },
   {
     kind: "Scripture",
-    text: "Trust in the LORD with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths.",
+    text: "Trust in the LORD with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.",
     source: "Proverbs 3:5–6",
   },
   {
     kind: "Scripture",
-    text: "Commit thy works unto the LORD, and thy thoughts shall be established.",
+    text: "Commit to the LORD whatever you do, and he will establish your plans.",
     source: "Proverbs 16:3",
   },
   {
     kind: "Scripture",
-    text: "What therefore God hath joined together, let not man put asunder.",
+    text: "Therefore what God has joined together, let no one separate.",
     source: "Mark 10:9",
   },
   {
     kind: "Scripture",
-    text: "There is no fear in love; but perfect love casteth out fear.",
+    text: "There is no fear in love. But perfect love drives out fear.",
     source: "1 John 4:18",
   },
   {
     kind: "Scripture",
-    text: "We love him, because he first loved us.",
+    text: "We love because he first loved us.",
     source: "1 John 4:19",
   },
   {
     kind: "Scripture",
-    text: "And above all things have fervent charity among yourselves: for charity shall cover the multitude of sins.",
+    text: "Above all, love each other deeply, because love covers over a multitude of sins.",
     source: "1 Peter 4:8",
   },
   {
     kind: "Scripture",
-    text: "And above all these things put on charity, which is the bond of perfectness.",
+    text: "And over all these virtues put on love, which binds them all together in perfect unity.",
     source: "Colossians 3:14",
   },
   {
     kind: "Scripture",
-    text: "With all lowliness and meekness, with longsuffering, forbearing one another in love.",
+    text: "Be completely humble and gentle; be patient, bearing with one another in love.",
     source: "Ephesians 4:2",
   },
   {
     kind: "Scripture",
-    text: "And be ye kind one to another, tenderhearted, forgiving one another, even as God for Christ's sake hath forgiven you.",
+    text: "Be kind and compassionate to one another, forgiving each other, just as in Christ God forgave you.",
     source: "Ephesians 4:32",
   },
   {
     kind: "Scripture",
-    text: "Be kindly affectioned one to another with brotherly love; in honour preferring one another.",
+    text: "Be devoted to one another in love. Honor one another above yourselves.",
     source: "Romans 12:10",
   },
   {
     kind: "Scripture",
-    text: "And we know that all things work together for good to them that love God, to them who are the called according to his purpose.",
+    text: "And we know that in all things God works for the good of those who love him, who have been called according to his purpose.",
     source: "Romans 8:28",
   },
   {
     kind: "Scripture",
-    text: "Now the God of hope fill you with all joy and peace in believing, that ye may abound in hope.",
+    text: "May the God of hope fill you with all joy and peace as you trust in him, so that you may overflow with hope by the power of the Holy Spirit.",
     source: "Romans 15:13",
   },
   {
     kind: "Scripture",
-    text: "For I know the thoughts that I think toward you, saith the LORD, thoughts of peace, and not of evil, to give you an expected end.",
+    text: "“For I know the plans I have for you,” declares the LORD, “plans to prosper you and not to harm you, plans to give you hope and a future.”",
     source: "Jeremiah 29:11",
   },
   {
     kind: "Scripture",
-    text: "Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee.",
+    text: "So do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.",
     source: "Isaiah 41:10",
   },
   {
     kind: "Scripture",
-    text: "They that wait upon the LORD shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.",
+    text: "But those who hope in the LORD will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.",
     source: "Isaiah 40:31",
   },
   {
     kind: "Scripture",
-    text: "I can do all things through Christ which strengtheneth me.",
+    text: "I can do all this through him who gives me strength.",
     source: "Philippians 4:13",
   },
   {
     kind: "Scripture",
-    text: "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God.",
+    text: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.",
     source: "Philippians 4:6",
   },
   {
     kind: "Scripture",
-    text: "The LORD bless thee, and keep thee: the LORD make his face shine upon thee, and be gracious unto thee: the LORD lift up his countenance upon thee, and give thee peace.",
+    text: "The LORD bless you and keep you; the LORD make his face shine on you and be gracious to you; the LORD turn his face toward you and give you peace.",
     source: "Numbers 6:24–26",
   },
   {
     kind: "Scripture",
-    text: "The LORD thy God in the midst of thee is mighty; he will save, he will rejoice over thee with joy; he will rest in his love, he will joy over thee with singing.",
+    text: "The LORD your God is with you, the Mighty Warrior who saves. He will take great delight in you; in his love he will no longer rebuke you, but will rejoice over you with singing.",
     source: "Zephaniah 3:17",
   },
   {
     kind: "Scripture",
-    text: "God is our refuge and strength, a very present help in trouble.",
+    text: "God is our refuge and strength, an ever-present help in trouble.",
     source: "Psalm 46:1",
   },
   {
     kind: "Scripture",
-    text: "Delight thyself also in the LORD; and he shall give thee the desires of thine heart.",
+    text: "Take delight in the LORD, and he will give you the desires of your heart.",
     source: "Psalm 37:4",
   },
   {
     kind: "Scripture",
-    text: "Now faith is the substance of things hoped for, the evidence of things not seen.",
+    text: "Now faith is confidence in what we hope for and assurance about what we do not see.",
     source: "Hebrews 11:1",
   },
   {
     kind: "Scripture",
-    text: "And let us not be weary in well doing: for in due season we shall reap, if we faint not.",
+    text: "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.",
     source: "Galatians 6:9",
   },
   {
     kind: "Scripture",
-    text: "For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind.",
+    text: "For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.",
     source: "2 Timothy 1:7",
   },
   {
     kind: "Scripture",
-    text: "Have not I commanded thee? Be strong and of a good courage; be not afraid, neither be thou dismayed: for the LORD thy God is with thee whithersoever thou goest.",
+    text: "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.",
     source: "Joshua 1:9",
   },
   {
     kind: "Scripture",
-    text: "It is not good that the man should be alone; I will make him an help meet for him.",
+    text: "The LORD God said, “It is not good for the man to be alone. I will make a helper suitable for him.”",
     source: "Genesis 2:18",
   },
 

@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { CATEGORIES, MOODS, type Category, type Mood } from "@/lib/constants";
+import {
+  BOOK_STATUSES,
+  CATEGORIES,
+  MOODS,
+  type BookStatus,
+  type Category,
+  type Mood,
+} from "@/lib/constants";
 
 export const signInSchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email address.")),
@@ -58,4 +65,61 @@ export const registerPhotoSchema = z.object({
     .max(4000)
     .regex(/^data:image\/(webp|jpeg|png);base64,[A-Za-z0-9+/=]+$/)
     .nullable(),
+});
+
+const bookStatusValues = BOOK_STATUSES.map((s) => s.value) as [BookStatus, ...BookStatus[]];
+
+/** Empty text → null, so optional fields clear in the database. */
+const optionalText = (max: number, message: string) =>
+  z
+    .string()
+    .trim()
+    .max(max, message)
+    .transform((v) => v || null);
+
+const optionalDate = z
+  .union([z.iso.date("Pick a valid date."), z.literal("")])
+  .transform((v) => v || null);
+
+/** What the book form sends to saveBook. */
+export const bookSchema = z
+  .object({
+    id: z.uuid().optional(),
+    title: z
+      .string()
+      .trim()
+      .min(1, "Add the book's title.")
+      .max(200, "Keep the title under 200 characters."),
+    author: z
+      .string()
+      .trim()
+      .min(1, "Add the author.")
+      .max(200, "Keep the author under 200 characters."),
+    status: z.enum(bookStatusValues),
+    startedOn: optionalDate,
+    finishedOn: optionalDate,
+    buyUrl: z
+      .string()
+      .trim()
+      .max(500, "That link is too long.")
+      .refine((v) => !v || /^https:\/\/[^\s/]+\.[^\s]+$/i.test(v), "Use a full https:// link.")
+      .transform((v) => v || null),
+    quote: optionalText(400, "Keep the quote under 400 characters, a sentence or two."),
+    reflection: optionalText(3000, "Keep it under 3,000 characters."),
+    visibility: z.enum(["private", "public"]),
+  })
+  .refine((b) => !b.startedOn || !b.finishedOn || b.finishedOn >= b.startedOn, {
+    message: "The finish date can't be before the start date.",
+    path: ["finishedOn"],
+  });
+
+export type BookInput = z.input<typeof bookSchema>;
+
+export const bookNoteSchema = z.object({
+  chapter: optionalText(80, "Keep the chapter under 80 characters."),
+  body: z
+    .string()
+    .trim()
+    .min(1, "Write something first.")
+    .max(2000, "Keep it under 2,000 characters."),
 });

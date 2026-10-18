@@ -2,6 +2,7 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { PHOTO_COLUMNS, toPhotos, type Photo, type PhotoRow } from "@/lib/images";
 import { SITE_NAME, type Category, type Mood } from "@/lib/constants";
+import { BOOK_COLUMNS, toBook, type Book, type BookRow } from "@/lib/queries/books";
 import { createPublicClient } from "@/lib/supabase/public";
 import type { TiptapDoc } from "@/components/rich-text/rich-text";
 
@@ -235,6 +236,26 @@ export async function getMoments(
  * A single public moment, or null when it doesn't exist, is private, or
  * Moments is off. All three look the same to a visitor.
  */
+/** Books marked public, newest first. Empty until migration 0009 runs. */
+export async function getPublicBooks(): Promise<Book[]> {
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 900, expire: 3000 });
+  cacheTag(PUBLIC_TAG);
+
+  const db = createPublicClient();
+  if (!db) return [];
+  const { data, error } = await db
+    .from("books")
+    .select(BOOK_COLUMNS)
+    .eq("visibility", "public")
+    .order("created_at", { ascending: false });
+  if (error) {
+    if (error.code === "42P01" || error.code === "PGRST205") return [];
+    throw new Error(`Couldn't load books: ${error.message}`);
+  }
+  return ((data ?? []) as BookRow[]).map(toBook);
+}
+
 export async function getMoment(slug: string): Promise<Moment | null> {
   "use cache";
   cacheLife({ stale: 300, revalidate: 900, expire: 3000 });

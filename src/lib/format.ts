@@ -1,5 +1,13 @@
 import { format, parseISO } from "date-fns";
-import { CATEGORIES, MOODS, TIME_ZONE, type Category, type Mood } from "@/lib/constants";
+import {
+  BOOK_STATUSES,
+  CATEGORIES,
+  MOODS,
+  TIME_ZONE,
+  type BookStatus,
+  type Category,
+  type Mood,
+} from "@/lib/constants";
 
 /** "Sun 11 Oct 2026" from a yyyy-mm-dd date. */
 export function formatEntryDate(date: string) {
@@ -13,6 +21,18 @@ export function formatLongDate(date: string) {
 
 export function categoryLabel(category: Category) {
   return CATEGORIES.find((c) => c.value === category)?.label ?? "Other";
+}
+
+export function bookStatusLabel(status: BookStatus) {
+  return BOOK_STATUSES.find((s) => s.value === status)?.label ?? "Reading now";
+}
+
+/** "Started 3 Oct 2026 · Finished 1 Nov 2026", or "" without dates. */
+export function bookDates(startedOn: string | null, finishedOn: string | null) {
+  const short = (d: string) => format(parseISO(d), "d MMM yyyy");
+  return [startedOn && `Started ${short(startedOn)}`, finishedOn && `Finished ${short(finishedOn)}`]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 export function moodInfo(mood: Mood | null) {

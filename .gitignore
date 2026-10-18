@@ -44,3 +44,7 @@ next-env.d.ts
 # design references, kept local (large; add them deliberately if wanted)
 /Our Diary — Prototype.html
 /Our Diary — Website Prototype PRD.pdf
+
+# Books and other documents we own copies of: never publish
+*.pdf
+*.epub
