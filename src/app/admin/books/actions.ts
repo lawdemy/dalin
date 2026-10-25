@@ -4,6 +4,7 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
+import { pushSoon } from "@/lib/push";
 import { PUBLIC_TAG } from "@/lib/queries/public";
 import { createClient } from "@/lib/supabase/server";
 import { bookNoteSchema, bookSchema, type BookInput } from "@/lib/validation";
@@ -13,6 +14,7 @@ export type BookResult = { error?: string; fieldErrors?: Record<string, string>;
 /** Adds a book, or with an id updates it. Either of us may edit any book. */
 export async function saveBook(input: BookInput): Promise<BookResult> {
   await requireMember();
+  pushSoon();
   const parsed = bookSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
@@ -66,6 +68,7 @@ export async function addBookNote(
   input: z.input<typeof bookNoteSchema>,
 ): Promise<BookNoteResult> {
   await requireMember();
+  pushSoon();
   if (!z.uuid().safeParse(bookId).success) return { error: "That book couldn't be found." };
   const parsed = bookNoteSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };

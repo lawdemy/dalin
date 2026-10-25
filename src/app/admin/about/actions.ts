@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
+import { pushSoon } from "@/lib/push";
 import { PUBLIC_TAG } from "@/lib/queries/public";
 import { sanitizeDoc } from "@/lib/rich-text-doc";
 import { createClient } from "@/lib/supabase/server";
@@ -34,6 +35,7 @@ export type SaveAboutResult = {
 /** Saves the About page and home page text. Rich text is cleaned first. */
 export async function saveAbout(input: z.input<typeof aboutSchema>): Promise<SaveAboutResult> {
   await requireMember();
+  pushSoon();
   const parsed = aboutSchema.safeParse(input);
   if (!parsed.success) {
     const f = z.flattenError(parsed.error).fieldErrors;

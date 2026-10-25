@@ -10,6 +10,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input, Textarea } from "@/components/ui/input";
 import { TIME_ZONE } from "@/lib/constants";
 import type { BookNote } from "@/lib/queries/books";
+import { DraftStatus } from "./draft-status";
+import { useDraft } from "./use-draft";
 
 /** "15 Oct 2026, 09:12" in the diary's time zone (same on server and client). */
 const stamp = new Intl.DateTimeFormat("en-GB", {
@@ -21,31 +23,47 @@ const stamp = new Intl.DateTimeFormat("en-GB", {
   minute: "2-digit",
 });
 
-type ReadingNotesProps = { bookId: string; notes: BookNote[]; meId: string };
+type ReadingNotesProps = {
+  bookId: string;
+  notes: BookNote[];
+  meId: string;
+  /** My unfinished reading note on this book, if I left one. */
+  savedDraft?: { id: string; chapter: string; body: string } | null;
+};
 
 /** Private notes on a book, between the two of us: where we are, what struck us. */
-export function ReadingNotes({ bookId, notes, meId }: ReadingNotesProps) {
+export function ReadingNotes({ bookId, notes, meId, savedDraft }: ReadingNotesProps) {
   const router = useRouter();
-  const [chapter, setChapter] = useState("");
-  const [body, setBody] = useState("");
+  const [chapter, setChapter] = useState(savedDraft?.chapter ?? "");
+  const [body, setBody] = useState(savedDraft?.body ?? "");
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
+  const autosave = useDraft({
+    kind: "book_note",
+    targetId: bookId,
+    id: savedDraft?.id,
+    payload: { chapter, body },
+  });
 
   function post() {
     if (!body.trim()) return;
     setError(undefined);
     startTransition(async () => {
+      await autosave.pause();
       const res = await addBookNote(bookId, { chapter, body });
       if (res.error) setError(res.error);
       else {
+        await autosave.discard();
         setBody("");
         router.refresh();
       }
+      autosave.resume();
     });
   }
 
   return (
     <section
+      id="notes"
       aria-labelledby="notes-title"
       className="flex flex-col gap-4 border-t border-sand pt-8"
     >
@@ -111,15 +129,12 @@ export function ReadingNotes({ bookId, notes, meId }: ReadingNotesProps) {
             {error}
           </p>
         )}
-        <Button
-          type="submit"
-          size="sm"
-          pending={pending}
-          disabled={!body.trim()}
-          className="self-end"
-        >
-          Add note
-        </Button>
+        <div className="flex items-center justify-between gap-3">
+          <DraftStatus status={autosave.status} error={autosave.error} />
+          <Button type="submit" size="sm" pending={pending} disabled={!body.trim()}>
+            Add note
+          </Button>
+        </div>
       </form>
     </section>
   );

@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
+import { pushSoon } from "@/lib/push";
 import {
   createUploadTicket,
   destroyAssets,
@@ -23,6 +24,7 @@ export type SettingsResult = { error?: string };
  */
 export async function setMomentsEnabled(enabled: boolean): Promise<SettingsResult> {
   await requireMember();
+  pushSoon();
   if (typeof enabled !== "boolean") return { error: "That change couldn't be saved." };
   const db = await createClient();
 

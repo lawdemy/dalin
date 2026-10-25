@@ -10,6 +10,7 @@ export const PUBLIC_NAV = [
   { href: "/gallery", label: "Gallery" },
   { href: "/moments", label: "Moments" },
   { href: "/books", label: "Bookshelf" },
+  { href: "/foundation", label: "Foundation" },
 ] as const;
 
 // Labels for the entry_mood and entry_category enums (migration 0004).

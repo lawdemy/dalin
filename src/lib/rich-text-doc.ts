@@ -108,6 +108,20 @@ function cleanMarks(marks: unknown): TiptapMark[] {
   });
 }
 
+/** Plain text of a document, blocks separated by spaces (for previews). */
+export function docText(doc: TiptapNode | null | undefined): string {
+  if (!doc) return "";
+  if (typeof doc.text === "string") return doc.text;
+  if (doc.type === "hardBreak") return " ";
+  // Text runs inside a paragraph join directly; blocks join with a space.
+  const inline = doc.type === "paragraph" || doc.type === "heading";
+  return (doc.content ?? [])
+    .map(docText)
+    .join(inline ? "" : " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function safeHref(value: string): string | null {
   try {
     const url = new URL(value);

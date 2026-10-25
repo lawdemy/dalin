@@ -12,6 +12,7 @@ import { describedBy, Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { Profile } from "@/lib/queries/settings";
+import { PushSettings } from "./push-settings";
 import { UploadError, uploadAvatar } from "./upload-photo";
 
 type SettingsFormProps = { momentsEnabled: boolean; profiles: Profile[] };
@@ -24,6 +25,7 @@ export function SettingsForm({ momentsEnabled, profiles }: SettingsFormProps) {
     <div className="mx-auto flex w-full max-w-180 flex-col gap-10">
       <h1 className="text-title">Settings</h1>
       <PublicSiteSection momentsEnabled={momentsEnabled} />
+      <PushSettings />
       {me && <ProfileSection profile={me} />}
       {partner && (
         <section className="flex flex-col gap-3">

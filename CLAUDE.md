@@ -64,6 +64,7 @@ Follows the prototype (`DESIGN.md`). Tokens live in `src/app/globals.css`; compo
 - `/about`: our story, how we met, engagement details, and a photo grid of us. All editable in admin.
 - `/gallery`: photos marked public, in a masonry grid with a lightbox.
 - `/moments`: feed of entries marked public (can be switched off in settings). `/moments/[slug]` shows a single public entry.
+- `/foundation`, `/foundation/apply`, `/foundation/apply/thanks`: the education foundation and its application form.
 - `/books`: our bookshelf, the books marked public, grouped Reading now / Finished / Up next, each with a "Get the book" link, a short quote and our thoughts.
 
 ### Private (login required)
@@ -77,6 +78,9 @@ Follows the prototype (`DESIGN.md`). Tokens live in `src/app/globals.css`; compo
 - `/admin/photos`: every photo, with toggles for "public in gallery", "show on About page" and "set as hero".
 - `/admin/about`: edit names, welcome line, story, how we met, and engagement details, and pick the hero photo.
 - `/admin/settings`: show or hide the Moments feed, site title, and each user's display name and avatar.
+- `/admin/notifications` (bell in the header): what the other one did; mark read, clear.
+- `/admin/foundation` (More → Foundation) and `/admin/foundation/[id]`: applications and their review.
+- `/admin/drafts` (More → Drafts): my unsent drafts, Gmail style.
 - `/admin/books` (More → Bookshelf), `/admin/books/new`, `/admin/books/[id]` (with private reading notes) and `/admin/books/[id]/edit`.
 
 ---
@@ -289,6 +293,9 @@ DaLin/
 - **Personal notes** (migration 0006, `notes`): written for the other person and shown on their dashboard from the chosen morning (`deliver_on`, Lagos date); RLS hides them from the recipient until then. The recipient may send **one reply** per note (migration 0008), on or after delivery; it is final, and an answered note can no longer be edited by its author (enforced by the `guard_note_update` trigger).
 - **Daily words** (`src/lib/daily-words.ts`): each person gets one Scripture (NIV, shown with Biblica's required notice; keep under 500 verses), Romance, Love, Faith and Motivation message every morning, different from the other's.
 - **Bookshelf** (migration 0009, `books` + `book_notes`): records the books we read together, never the books themselves. **No book files are uploaded or offered for download** (copyright; `*.pdf`/`*.epub` are git-ignored). Public books show title, author, an https buy link, a quote of a sentence or two (max 400 chars) and our reflection. Reading notes are members only; each person edits or deletes only their own.
+- **Drafts** (migration 0010, `drafts`): Gmail-style autosave for new entries, personal notes, comments, note replies and reading notes. Saves about 1.2 s after typing stops, when the page is hidden or left, and when the connection returns (`useDraft` in `src/components/admin/use-draft.ts`). Drafts are private to their author (the partner never sees them); listed newest first at `/admin/drafts` (More → Drafts), reopened where they were written, deleted when sent or discarded. Discarding an entry draft also deletes its unsaved photos. Edits to existing entries and books are not drafted (they keep the leave-page warning).
+- **Notifications** (migration 0011, `notifications` + `push_subscriptions`): an in-app bell (header, unread count, `/admin/notifications`) plus web push to phones. Written by **database triggers** (entries created/edited, comments, notes on their delivery morning, note replies, About us/hero/Moments changes, photos shared, books added/finished/edited, reading notes, foundation applications), always to the other member, never the actor; repeat edits within an hour merge into one. Push: `src/lib/push.ts` calls `claim_pushes(PUSH_SECRET)` (secret in `private.app_config`, no service-role key) via `pushSoon()` (Next `after()`) at the start of each notifying Server Action, and Vercel Cron hits `/api/cron/push` at 06:00 UTC (07:00 Lagos) for notes due that day. Each device opts in at Settings → Phone notifications; iPhones must first Add to Home Screen (`src/app/manifest.ts`, `public/sw.js`, icons in `public/icons/`). Env: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `PUSH_SECRET`, `CRON_SECRET`.
+- **Foundation** (migration 0012, `scholarship_applications` + `application_documents`; name placeholder `FOUNDATION_NAME` in `src/lib/foundation.ts`): public `/foundation` and `/foundation/apply`; scholarships and school fees support, primary to PhD, public and private schools, **nationals of the 54 African countries only** (enforced in the DB). Under-18s apply through a parent or guardian (name, relationship, phone, consent required; enforced in the DB). Visitors can't read applications: they submit through `submit_application()` (rate-limited: 3 per phone/email a day, 300 a day overall) and attach up to 6 documents (PDF or photo, 10 MB) with a one-time token valid 2 hours. Documents are private Cloudinary assets under `dalin/applications/<id>/`, photos re-encoded in the browser (no EXIF). Members review at `/admin/foundation` (status, approved amount, private notes, delete on request); both get a notification per application. Cloudinary: if PDFs won't open, enable Settings → Security → "Allow delivery of PDF and ZIP files".
 - **Wedding banner** on the public home page: "coming soon", no date, over a photo that is already public.
 
 ## Open questions (fill in when known)

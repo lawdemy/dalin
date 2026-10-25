@@ -10,6 +10,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Textarea } from "@/components/ui/input";
 import { TIME_ZONE } from "@/lib/constants";
 import type { Comment } from "@/lib/queries/comments";
+import { DraftStatus } from "./draft-status";
+import { useDraft } from "./use-draft";
 
 /** "15 Oct 2026, 09:12" in the diary's time zone (same on server and client). */
 const stamp = new Intl.DateTimeFormat("en-GB", {
@@ -26,30 +28,43 @@ type CommentsProps = {
   comments: Comment[];
   meId: string;
   setupNeeded?: boolean;
+  /** My unfinished comment on this entry, if I left one. */
+  savedDraft?: { id: string; body: string } | null;
 };
 
 /** Private conversation under an entry, between the two of us. */
-export function Comments({ entryId, comments, meId, setupNeeded }: CommentsProps) {
+export function Comments({ entryId, comments, meId, setupNeeded, savedDraft }: CommentsProps) {
   const router = useRouter();
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(savedDraft?.body ?? "");
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
+  const autosave = useDraft({
+    kind: "comment",
+    targetId: entryId,
+    id: savedDraft?.id,
+    payload: { body: draft },
+    enabled: !setupNeeded,
+  });
 
   function post() {
     if (!draft.trim()) return;
     setError(undefined);
     startTransition(async () => {
+      await autosave.pause();
       const res = await addComment(entryId, draft);
       if (res.error) setError(res.error);
       else {
+        await autosave.discard();
         setDraft("");
         router.refresh();
       }
+      autosave.resume();
     });
   }
 
   return (
     <section
+      id="comments"
       aria-labelledby="comments-title"
       className="flex flex-col gap-4 border-t border-sand pt-8"
     >
@@ -109,15 +124,12 @@ export function Comments({ entryId, comments, meId, setupNeeded }: CommentsProps
                 {error}
               </p>
             )}
-            <Button
-              type="submit"
-              size="sm"
-              pending={pending}
-              disabled={!draft.trim()}
-              className="self-end"
-            >
-              Post comment
-            </Button>
+            <div className="flex items-center justify-between gap-3">
+              <DraftStatus status={autosave.status} error={autosave.error} />
+              <Button type="submit" size="sm" pending={pending} disabled={!draft.trim()}>
+                Post comment
+              </Button>
+            </div>
           </form>
         </>
       )}

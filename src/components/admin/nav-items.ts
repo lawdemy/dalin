@@ -1,6 +1,8 @@
 import {
   BookOpen,
   Calendar,
+  FilePen,
+  GraduationCap,
   House,
   Image as ImageIcon,
   Library,
@@ -22,8 +24,10 @@ export const TAB_ITEMS: NavItem[] = [
 
 /** Inside the "More" sheet on phones. */
 export const MORE_ITEMS: NavItem[] = [
+  { href: "/admin/foundation", label: "Foundation", icon: GraduationCap },
   { href: "/admin/calendar", label: "Calendar", icon: Calendar },
   { href: "/admin/books", label: "Bookshelf", icon: Library },
+  { href: "/admin/drafts", label: "Drafts", icon: FilePen },
   { href: "/admin/about", label: "About Us editor", icon: PenLine },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

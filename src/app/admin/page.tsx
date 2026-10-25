@@ -1,5 +1,5 @@
 import { addDays, differenceInCalendarMonths, format, parseISO } from "date-fns";
-import { EyeOff, Plus } from "lucide-react";
+import { EyeOff, FilePen, GraduationCap, Plus } from "lucide-react";
 import Link from "next/link";
 import { DailyWords } from "@/components/admin/daily-word";
 import { AdminEntryCard } from "@/components/admin/entry-card";
@@ -13,19 +13,31 @@ import { signedSources } from "@/lib/cloudinary";
 import { wordsForDay } from "@/lib/daily-words";
 import { greetingInDiary, longTodayInDiary, todayInDiary } from "@/lib/format";
 import { listAuthors, listEntries, type EntryListItem } from "@/lib/queries/entries";
+import { countDrafts, getDraft, getTargetDrafts } from "@/lib/queries/drafts";
+import { countNewApplications } from "@/lib/queries/foundation";
 import { getDashboardNotes } from "@/lib/queries/notes";
 import { getMomentsEnabled } from "@/lib/queries/settings";
 
 /** How many entries the dashboard shows before pointing to the Timeline. */
 const LIMIT = 500;
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: PageProps<"/admin">) {
   const member = await requireMember();
-  const [{ entries, hasMore }, notes, momentsEnabled] = await Promise.all([
-    listEntries({ limit: LIMIT }),
-    getDashboardNotes(),
-    getMomentsEnabled(),
-  ]);
+  const { draft: draftParam } = await searchParams;
+  const [{ entries, hasMore }, notes, momentsEnabled, draftCount, noteDraft, newApplications] =
+    await Promise.all([
+      listEntries({ limit: LIMIT }),
+      getDashboardNotes(),
+      getMomentsEnabled(),
+      countDrafts(),
+      // Reopening a note draft from /admin/drafts: ?draft=<id>.
+      typeof draftParam === "string" ? getDraft(draftParam, "note") : null,
+      countNewApplications(),
+    ]);
+  const replyDrafts = await getTargetDrafts(
+    "note_reply",
+    [...notes.today, ...notes.earlier].filter((n) => !n.reply).map((n) => n.id),
+  );
   // The second of us (by account age) gets the other half of each list.
   const authors = await listAuthors();
   const viewer = authors.findIndex((a) => a.id === member.id) === 1 ? 1 : 0;
@@ -71,7 +83,16 @@ export default async function DashboardPage() {
 
       <section aria-label="For you today" className="flex flex-col gap-3">
         <DailyWords words={wordsForDay(today, viewer)} />
-        <NotesPanel notes={notes} today={today} tomorrow={tomorrow} />
+        <NotesPanel
+          key={noteDraft?.id}
+          notes={notes}
+          today={today}
+          tomorrow={tomorrow}
+          replyDrafts={Object.fromEntries(
+            [...replyDrafts].map(([noteId, d]) => [noteId, { id: d.id, reply: d.payload.reply }]),
+          )}
+          noteDraft={noteDraft && { id: noteDraft.id, ...noteDraft.payload }}
+        />
         {notes.setupNeeded && (
           <p className="text-caption text-muted">
             Personal notes switch on once migrations 0006 and 0008 have been run in Supabase.
@@ -86,6 +107,30 @@ export default async function DashboardPage() {
         <Plus aria-hidden className="size-5" strokeWidth={2} />
         New entry
       </Link>
+
+      {newApplications > 0 && (
+        <Link
+          href="/admin/foundation?status=new"
+          className="-mt-5 flex min-h-11 items-center justify-center gap-2 self-center text-label font-medium"
+        >
+          <GraduationCap aria-hidden className="size-4.5" strokeWidth={1.8} />
+          {newApplications === 1
+            ? "1 new foundation application"
+            : `${newApplications} new foundation applications`}
+        </Link>
+      )}
+
+      {draftCount > 0 && (
+        <Link
+          href="/admin/drafts"
+          className="-mt-5 flex min-h-11 items-center justify-center gap-2 self-center text-label font-medium"
+        >
+          <FilePen aria-hidden className="size-4.5" strokeWidth={1.8} />
+          {draftCount === 1
+            ? "You have 1 unfinished draft"
+            : `You have ${draftCount} unfinished drafts`}
+        </Link>
+      )}
 
       <section aria-label="Counts" className="grid grid-cols-3 gap-3">
         <Stat value={inMonth} label={`in ${format(parseISO(`${thisMonth}-01`), "MMMM")}`} />

@@ -149,3 +149,79 @@ export async function destroyAssets(publicIds: string[]) {
     ),
   );
 }
+
+// Foundation documents ------------------------------------------------------------------
+// Applicants' files (PDFs and photos of documents) are private assets under
+// dalin/applications/<application id>/<uuid>. Only members ever get links.
+
+export const APPLICATION_FOLDER = "dalin/applications";
+const DOCUMENT_FORMATS = { image: ["webp", "jpg"], pdf: ["pdf"] } as const;
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+
+export function isApplicationDocumentId(publicId: string, applicationId: string) {
+  return new RegExp(`^${APPLICATION_FOLDER}/${applicationId}/[0-9a-f-]{36}$`).test(publicId);
+}
+
+/** A one-time signed upload for one document of one application. */
+export function createDocumentTicket(applicationId: string, type: "image" | "pdf"): UploadTicket {
+  const cld = client();
+  const params = {
+    public_id: `${APPLICATION_FOLDER}/${applicationId}/${randomUUID()}`,
+    type: "authenticated",
+    overwrite: "false",
+    allowed_formats: DOCUMENT_FORMATS[type].join(","),
+    timestamp: String(Math.floor(Date.now() / 1000)),
+  };
+  const signature = cld.utils.api_sign_request(params, apiSecret!);
+  return {
+    url: `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    publicId: params.public_id,
+    fields: { ...params, signature, api_key: apiKey! },
+  };
+}
+
+/** Checks an uploaded document with Cloudinary (never trust the browser). */
+export async function verifyDocument(publicId: string) {
+  try {
+    const r = await client().api.resource(publicId, { type: "authenticated", pages: true });
+    const format = r.format === "jpeg" ? "jpg" : (r.format as string);
+    const ok =
+      r.type === "authenticated" &&
+      ["pdf", "jpg", "webp"].includes(format) &&
+      r.bytes > 0 &&
+      r.bytes <= MAX_DOCUMENT_BYTES;
+    if (!ok) return null;
+    return {
+      format: format as "pdf" | "jpg" | "webp",
+      bytes: r.bytes as number,
+      pages: (r.pages as number | undefined) ?? null,
+      width: (r.width as number | undefined) ?? null,
+      height: (r.height as number | undefined) ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Links for a member viewing a document: a small preview image (page 1 of a
+ * PDF), the file itself, and a download that expires after an hour.
+ */
+export function documentLinks(publicId: string, format: string) {
+  const cld = client();
+  return {
+    preview: cld.url(publicId, {
+      type: "authenticated",
+      sign_url: true,
+      format: "jpg",
+      transformation: [{ page: 1, width: 480, crop: "limit" }, { quality: "auto" }],
+    }),
+    open: cld.url(publicId, { type: "authenticated", sign_url: true, format }),
+    download: cld.utils.private_download_url(publicId, format, {
+      type: "authenticated",
+      resource_type: "image",
+      attachment: true,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+    }),
+  };
+}

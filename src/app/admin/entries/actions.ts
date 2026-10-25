@@ -4,6 +4,7 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
+import { pushSoon } from "@/lib/push";
 import {
   createUploadTicket,
   destroyAssets,
@@ -94,6 +95,7 @@ export type SaveEntryResult = {
 
 export async function saveEntry(input: EntryInput): Promise<SaveEntryResult> {
   await requireMember();
+  pushSoon();
   const parsed = entrySchema.safeParse(input);
   if (!parsed.success) {
     const f = z.flattenError(parsed.error).fieldErrors;
@@ -210,6 +212,9 @@ export async function saveEntry(input: EntryInput): Promise<SaveEntryResult> {
   if (unpublished.length && !(await rekeyPhotos(db, unpublished))) {
     return { error: "Saved, but old photo links couldn't be switched off. Save again to retry." };
   }
+
+  // The entry is saved, so its draft (if it had one) is done with.
+  if (d.draftId) await db.from("drafts").delete().eq("id", d.draftId);
 
   updateTag(PUBLIC_TAG);
   redirect(`/admin/entries/${entryId}`);

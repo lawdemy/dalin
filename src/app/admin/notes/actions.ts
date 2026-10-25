@@ -3,6 +3,7 @@
 import { addYears, format } from "date-fns";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
+import { pushSoon } from "@/lib/push";
 import { todayInDiary } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,7 @@ const noteSchema = z.object({
 /** Writes a note for the other one of us, to appear on the chosen morning. */
 export async function saveNote(input: z.input<typeof noteSchema>): Promise<NoteResult> {
   const me = await requireMember();
+  pushSoon();
   const parsed = noteSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };
   const { message, deliverOn } = parsed.data;
@@ -65,6 +67,7 @@ const replySchema = z
  */
 export async function replyToNote(id: string, reply: string): Promise<NoteResult> {
   await requireMember();
+  pushSoon();
   if (!z.uuid().safeParse(id).success) return { error: "That note couldn't be found." };
   const parsed = replySchema.safeParse(reply);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };

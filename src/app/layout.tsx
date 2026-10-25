@@ -36,6 +36,9 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
   // The PRD keeps the whole site out of search engines until we decide otherwise.
   robots: { index: false, follow: false },
+  // Added to the Home Screen, the diary opens like an app (needed for push on iPhone).
+  appleWebApp: { capable: true, title: "DaLin", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

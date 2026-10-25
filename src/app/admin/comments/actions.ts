@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
+import { pushSoon } from "@/lib/push";
 import { createClient } from "@/lib/supabase/server";
 
 export type CommentResult = { error?: string };
@@ -15,6 +16,7 @@ const bodySchema = z
 /** Adds a comment to an entry as the signed-in member. */
 export async function addComment(entryId: string, body: string): Promise<CommentResult> {
   await requireMember();
+  pushSoon();
   if (!z.uuid().safeParse(entryId).success) return { error: "That entry couldn't be found." };
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message };

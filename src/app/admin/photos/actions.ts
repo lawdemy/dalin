@@ -3,6 +3,7 @@
 import { updateTag } from "next/cache";
 import { z } from "zod";
 import { requireMember } from "@/lib/auth";
+import { pushSoon } from "@/lib/push";
 import { destroyAssets } from "@/lib/cloudinary";
 import { keepLinksPrivate } from "@/lib/photo-visibility";
 import { PUBLIC_TAG } from "@/lib/queries/public";
@@ -34,6 +35,7 @@ export async function updatePhoto(
   input: z.input<typeof settingsSchema>,
 ): Promise<PhotoActionResult> {
   await requireMember();
+  pushSoon();
   const parsed = settingsSchema.safeParse(input);
   if (!parsed.success) return { error: "That change couldn't be saved." };
   const { id, inGallery, onAbout, caption } = parsed.data;
@@ -84,6 +86,7 @@ export async function updatePhoto(
 /** Makes a photo the home page hero, or clears it with null. */
 export async function setHeroPhoto(id: string | null): Promise<PhotoActionResult> {
   await requireMember();
+  pushSoon();
   if (id !== null && !z.uuid().safeParse(id).success)
     return { error: "That photo couldn't be found." };
   const db = await createClient();

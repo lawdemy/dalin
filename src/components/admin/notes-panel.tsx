@@ -9,16 +9,31 @@ import { Button } from "@/components/ui/button";
 import { describedBy, Field } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/input";
 import type { DashboardNotes, Note } from "@/lib/queries/notes";
+import { DraftStatus } from "./draft-status";
+import { useDraft } from "./use-draft";
+
+export type ReplyDraft = { id: string; reply: string };
+export type NoteDraft = { id: string; message: string; deliverOn: string };
 
 type NotesPanelProps = {
   notes: DashboardNotes;
   /** yyyy-mm-dd in the diary's time zone. */
   today: string;
   tomorrow: string;
+  /** My unfinished replies, by note id. */
+  replyDrafts?: Record<string, ReplyDraft>;
+  /** A note draft to reopen (from /admin/drafts). */
+  noteDraft?: NoteDraft | null;
 };
 
 /** Today's notes from your partner, replies to yours, and writing your own. */
-export function NotesPanel({ notes, today, tomorrow }: NotesPanelProps) {
+export function NotesPanel({
+  notes,
+  today,
+  tomorrow,
+  replyDrafts = {},
+  noteDraft,
+}: NotesPanelProps) {
   const { partner } = notes;
   if (!partner) return null;
   const canReply = !notes.repliesUnavailable;
@@ -28,7 +43,8 @@ export function NotesPanel({ notes, today, tomorrow }: NotesPanelProps) {
       {notes.today.map((note) => (
         <figure
           key={note.id}
-          className="flex flex-col gap-2 rounded-xl bg-rose-tint px-5 py-5 md:px-6"
+          id={`note-${note.id}`}
+          className="flex scroll-mt-20 flex-col gap-2 rounded-xl bg-rose-tint px-5 py-5 md:px-6"
         >
           <figcaption className="flex items-center gap-2 text-caption font-medium tracking-[1px] text-danger-text uppercase">
             <Heart aria-hidden className="size-4" strokeWidth={2} fill="currentColor" />A note from{" "}
@@ -38,7 +54,9 @@ export function NotesPanel({ notes, today, tomorrow }: NotesPanelProps) {
             {note.message}
           </blockquote>
           <p className="text-label font-medium text-danger-text">— {partner.name}</p>
-          {canReply && <ReplyBox note={note} partnerName={partner.name} />}
+          {canReply && (
+            <ReplyBox note={note} partnerName={partner.name} draft={replyDrafts[note.id]} />
+          )}
         </figure>
       ))}
 
@@ -67,9 +85,15 @@ export function NotesPanel({ notes, today, tomorrow }: NotesPanelProps) {
           today={today}
           tomorrow={tomorrow}
           scheduled={notes.scheduled}
+          resume={noteDraft}
         />
         {notes.earlier.length > 0 && (
-          <EarlierNotes partnerName={partner.name} notes={notes.earlier} canReply={canReply} />
+          <EarlierNotes
+            partnerName={partner.name}
+            notes={notes.earlier}
+            canReply={canReply}
+            replyDrafts={replyDrafts}
+          />
         )}
         {notes.sent.length > 0 && <SentNotes partnerName={partner.name} notes={notes.sent} />}
       </div>
@@ -82,12 +106,28 @@ function excerpt(text: string, max = 120) {
 }
 
 /** Your one reply to a note written for you. Final once sent. */
-function ReplyBox({ note, partnerName }: { note: Note; partnerName: string }) {
+function ReplyBox({
+  note,
+  partnerName,
+  draft,
+}: {
+  note: Note;
+  partnerName: string;
+  /** My unfinished reply, if I started one. */
+  draft?: ReplyDraft;
+}) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [text, setText] = useState("");
+  const [open, setOpen] = useState(Boolean(draft));
+  const [text, setText] = useState(draft?.reply ?? "");
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
+  const autosave = useDraft({
+    kind: "note_reply",
+    targetId: note.id,
+    id: draft?.id,
+    payload: { reply: text },
+    enabled: !note.reply,
+  });
 
   if (note.reply) {
     return (
@@ -107,7 +147,7 @@ function ReplyBox({ note, partnerName }: { note: Note; partnerName: string }) {
         className="-ml-2 self-start text-danger-text hover:text-danger-text"
       >
         <Reply aria-hidden className="size-4.5" strokeWidth={1.8} />
-        Reply to {partnerName}
+        {text.trim() ? "Continue your reply (draft)" : `Reply to ${partnerName}`}
       </Button>
     );
   }
@@ -115,9 +155,25 @@ function ReplyBox({ note, partnerName }: { note: Note; partnerName: string }) {
   function send() {
     setError(undefined);
     startTransition(async () => {
+      await autosave.pause();
       const res = await replyToNote(note.id, text);
-      if (res.error) setError(res.error);
-      else router.refresh();
+      if (res.error) {
+        setError(res.error);
+        autosave.resume();
+      } else {
+        await autosave.discard();
+        router.refresh();
+      }
+    });
+  }
+
+  function discard() {
+    startTransition(async () => {
+      await autosave.pause();
+      await autosave.discard();
+      setText("");
+      setOpen(false);
+      autosave.resume();
     });
   }
 
@@ -150,13 +206,33 @@ function ReplyBox({ note, partnerName }: { note: Note; partnerName: string }) {
           {error}
         </p>
       )}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" size="sm" pending={pending} disabled={!text.trim()}>
           Send reply
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => setOpen(false)} disabled={pending}>
-          Cancel
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            void autosave.flush();
+            setOpen(false);
+          }}
+          disabled={pending}
+        >
+          Close
         </Button>
+        {text.trim() && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={discard}
+            disabled={pending}
+            className="text-danger-text hover:text-danger-text"
+          >
+            Discard
+          </Button>
+        )}
+        <DraftStatus status={autosave.status} error={autosave.error} />
       </div>
     </form>
   );
@@ -166,24 +242,32 @@ function EarlierNotes({
   partnerName,
   notes,
   canReply,
+  replyDrafts,
 }: {
   partnerName: string;
   notes: Note[];
   canReply: boolean;
+  replyDrafts: Record<string, ReplyDraft>;
 }) {
+  // Open the list when a reply draft is waiting in it.
+  const hasDraft = canReply && notes.some((n) => !n.reply && replyDrafts[n.id]);
   return (
-    <details className="group w-full">
+    <details className="group w-full" open={hasDraft || undefined}>
       <summary className="flex min-h-11 cursor-pointer list-none items-center text-label font-medium text-accent-dark">
         Earlier notes from {partnerName} ({notes.length})
       </summary>
       <ul className="mt-1 flex flex-col gap-2">
         {notes.map((n) => (
-          <li key={n.id} className="flex flex-col gap-1 rounded-xl bg-linen px-4 py-3">
+          <li
+            key={n.id}
+            id={`note-${n.id}`}
+            className="flex scroll-mt-20 flex-col gap-1 rounded-xl bg-linen px-4 py-3"
+          >
             <p className="whitespace-pre-line">{n.message}</p>
             <p className="text-caption text-muted">
               {format(parseISO(n.deliverOn), "EEE d MMM yyyy")}
             </p>
-            {canReply && <ReplyBox note={n} partnerName={partnerName} />}
+            {canReply && <ReplyBox note={n} partnerName={partnerName} draft={replyDrafts[n.id]} />}
           </li>
         ))}
       </ul>
@@ -226,20 +310,57 @@ function NoteComposer({
   today,
   tomorrow,
   scheduled,
+  resume,
 }: {
   partnerName: string;
   today: string;
   tomorrow: string;
   scheduled: Note[];
+  /** A saved draft to reopen straight away. */
+  resume?: NoteDraft | null;
 }) {
   const router = useRouter();
   const ref = useRef<HTMLDialogElement>(null);
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [deliverOn, setDeliverOn] = useState(tomorrow);
+  const [open, setOpen] = useState(Boolean(resume));
+  const [message, setMessage] = useState(resume?.message ?? "");
+  const [deliverOn, setDeliverOn] = useState(
+    resume?.deliverOn && resume.deliverOn >= today ? resume.deliverOn : tomorrow,
+  );
   const [error, setError] = useState<string>();
   const [sent, setSent] = useState<string>();
   const [pending, startTransition] = useTransition();
+  // Each new note gets its own draft id when the composer opens.
+  const [draftId, setDraftId] = useState<string | null>(resume?.id ?? null);
+  const autosave = useDraft({
+    kind: "note",
+    id: draftId,
+    payload: { message, deliverOn },
+    enabled: open && draftId !== null,
+  });
+
+  function openComposer() {
+    setSent(undefined);
+    if (!draftId) setDraftId(crypto.randomUUID());
+    setOpen(true);
+  }
+
+  /** Closing keeps what you wrote as a draft, like Gmail. */
+  function close() {
+    void autosave.flush();
+    setOpen(false);
+  }
+
+  function discard() {
+    startTransition(async () => {
+      await autosave.pause();
+      await autosave.discard();
+      setMessage("");
+      setDeliverOn(tomorrow);
+      setDraftId(null);
+      setOpen(false);
+      autosave.resume();
+    });
+  }
 
   useEffect(() => {
     const d = ref.current;
@@ -253,11 +374,17 @@ function NoteComposer({
   function save() {
     setError(undefined);
     startTransition(async () => {
+      await autosave.pause();
       const res = await saveNote({ message, deliverOn });
       if (res.error) {
         setError(res.error);
+        autosave.resume();
         return;
       }
+      await autosave.discard();
+      // The composer stays open: anything written next is a fresh draft.
+      setDraftId(crypto.randomUUID());
+      autosave.resume();
       setSent(
         deliverOn === today
           ? `Sent. ${partnerName} will see it today.`
@@ -279,25 +406,18 @@ function NoteComposer({
 
   return (
     <>
-      <Button
-        variant="secondary"
-        size="sm"
-        onClick={() => {
-          setSent(undefined);
-          setOpen(true);
-        }}
-      >
+      <Button variant="secondary" size="sm" onClick={openComposer}>
         <PenLine aria-hidden className="size-4.5" strokeWidth={1.8} />
-        Leave a note for {partnerName}
+        {message.trim() ? "Continue your note (draft)" : `Leave a note for ${partnerName}`}
         {scheduled.length > 0 && <span className="text-muted">({scheduled.length} waiting)</span>}
       </Button>
 
       <dialog
         ref={ref}
         aria-labelledby="note-title"
-        onClose={() => setOpen(false)}
+        onClose={close}
         onClick={(e) => {
-          if (e.target === e.currentTarget) setOpen(false);
+          if (e.target === e.currentTarget) close();
         }}
         className="mx-0 mt-auto mb-0 max-h-[92dvh] w-full max-w-full rounded-t-[20px] bg-ivory px-5 pt-4 pb-[calc(20px+env(safe-area-inset-bottom))] text-ink md:m-auto md:max-w-130 md:rounded-2xl md:p-6"
       >
@@ -307,8 +427,8 @@ function NoteComposer({
           </h2>
           <button
             type="button"
-            aria-label="Close"
-            onClick={() => setOpen(false)}
+            aria-label="Close and keep as a draft"
+            onClick={close}
             className="flex size-11 items-center justify-center rounded-xl hover:bg-linen"
           >
             <X aria-hidden className="size-5" strokeWidth={1.8} />
@@ -355,9 +475,24 @@ function NoteComposer({
             <Button type="submit" pending={pending} disabled={!message.trim()}>
               Save note
             </Button>
-            <span aria-live="polite" className="text-caption text-muted">
-              {sent}
-            </span>
+            {message.trim() && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={discard}
+                disabled={pending}
+                className="text-danger-text hover:text-danger-text"
+              >
+                Discard
+              </Button>
+            )}
+            {sent ? (
+              <span aria-live="polite" className="text-caption text-muted">
+                {sent}
+              </span>
+            ) : (
+              <DraftStatus status={autosave.status} error={autosave.error} />
+            )}
           </div>
         </form>
 

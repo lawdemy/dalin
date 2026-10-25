@@ -10,6 +10,7 @@ import { VisibilityBadge } from "@/components/ui/visibility-badge";
 import { requireMember } from "@/lib/auth";
 import { bookDates, bookStatusLabel } from "@/lib/format";
 import { getBook, getBookNotes } from "@/lib/queries/books";
+import { getTargetDrafts } from "@/lib/queries/drafts";
 
 export const metadata: Metadata = { title: "Book" };
 
@@ -18,7 +19,12 @@ export default async function BookPage({ params }: PageProps<"/admin/books/[id]"
   const { id } = await params;
   const book = await getBook(id); // checks membership
   if (!book) notFound();
-  const [me, notes] = await Promise.all([requireMember(), getBookNotes(book.id)]);
+  const [me, notes, drafts] = await Promise.all([
+    requireMember(),
+    getBookNotes(book.id),
+    getTargetDrafts("book_note", [book.id]),
+  ]);
+  const noteDraft = drafts.get(book.id);
   const dates = bookDates(book.startedOn, book.finishedOn);
 
   return (
@@ -95,7 +101,12 @@ export default async function BookPage({ params }: PageProps<"/admin/books/[id]"
         </p>
       )}
 
-      <ReadingNotes bookId={book.id} notes={notes} meId={me.id} />
+      <ReadingNotes
+        bookId={book.id}
+        notes={notes}
+        meId={me.id}
+        savedDraft={noteDraft && { id: noteDraft.id, ...noteDraft.payload }}
+      />
     </article>
   );
 }

@@ -2,6 +2,7 @@
 
 import { CircleAlert, Trash2, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { deleteEntry, saveEntry, type SaveEntryResult } from "@/app/admin/entries/actions";
 import { Editor } from "@/components/rich-text/editor";
@@ -13,26 +14,50 @@ import { Input } from "@/components/ui/input";
 import type { Visibility } from "@/components/ui/visibility-badge";
 import { VisibilityToggle } from "@/components/ui/visibility-toggle";
 import type { Category, Mood } from "@/lib/constants";
+import type { Photo } from "@/lib/images";
 import type { Entry } from "@/lib/queries/entries";
 import { CategoryPicker } from "./category-picker";
+import { DraftStatus } from "./draft-status";
 import { MoodPicker } from "./mood-picker";
 import { PhotoUploader, type PhotoItem } from "./photo-uploader";
+import { useDraft } from "./use-draft";
+
+/** What a new entry's draft holds when it is reopened. */
+export type EntryDraftValues = {
+  title: string;
+  entryDate: string;
+  location: string;
+  mood: Mood | null;
+  category: Category;
+  body: TiptapDoc | null;
+  visibility: Visibility;
+  photos: { photo: Photo; caption: string }[];
+  coverPhotoId: string | null;
+};
 
 type EntryFormProps = {
   /** The entry being edited; omit for a new one. */
   entry?: Entry;
   /** Today in the diary's time zone, yyyy-mm-dd (new entries). */
   today: string;
+  /** New entries: the draft they autosave into, and its content when reopened. */
+  draft?: { id: string; values?: EntryDraftValues };
 };
 
-export function EntryForm({ entry, today }: EntryFormProps) {
-  const [title, setTitle] = useState(entry?.title ?? "");
-  const [entryDate, setEntryDate] = useState(entry?.entryDate ?? today);
-  const [location, setLocation] = useState(entry?.location ?? "");
-  const [mood, setMood] = useState<Mood | null>(entry?.mood ?? null);
-  const [category, setCategory] = useState<Category>(entry?.category ?? "everyday");
-  const [body, setBody] = useState<TiptapDoc | null>(entry?.body ?? null);
-  const [visibility, setVisibility] = useState<Visibility>(entry?.visibility ?? "private");
+export function EntryForm({ entry, today, draft }: EntryFormProps) {
+  const router = useRouter();
+  const start = draft?.values;
+  const [title, setTitle] = useState(entry?.title ?? start?.title ?? "");
+  const [entryDate, setEntryDate] = useState(entry?.entryDate ?? (start?.entryDate || today));
+  const [location, setLocation] = useState(entry?.location ?? start?.location ?? "");
+  const [mood, setMood] = useState<Mood | null>(entry?.mood ?? start?.mood ?? null);
+  const [category, setCategory] = useState<Category>(
+    entry?.category ?? start?.category ?? "everyday",
+  );
+  const [body, setBody] = useState<TiptapDoc | null>(entry?.body ?? start?.body ?? null);
+  const [visibility, setVisibility] = useState<Visibility>(
+    entry?.visibility ?? start?.visibility ?? "private",
+  );
   const [items, setItems] = useState<PhotoItem[]>(
     () =>
       entry?.photos.map((photo) => ({
@@ -40,9 +65,18 @@ export function EntryForm({ entry, today }: EntryFormProps) {
         status: "ready" as const,
         photo,
         caption: photo.caption ?? "",
-      })) ?? [],
+      })) ??
+      start?.photos.map(({ photo, caption }) => ({
+        key: photo.id,
+        status: "ready" as const,
+        photo,
+        caption,
+      })) ??
+      [],
   );
-  const [coverId, setCoverId] = useState<string | null>(entry?.coverPhotoId ?? null);
+  const [coverId, setCoverId] = useState<string | null>(
+    entry?.coverPhotoId ?? start?.coverPhotoId ?? null,
+  );
   const [dirty, setDirty] = useState(false);
   const [result, setResult] = useState<SaveEntryResult>({});
   const [saving, startSaving] = useTransition();
@@ -53,6 +87,25 @@ export function EntryForm({ entry, today }: EntryFormProps) {
     ? coverId
     : (ready[0]?.photo.id ?? null);
 
+  // New entries save themselves as a draft while you write (see /admin/drafts).
+  const drafting = !entry && Boolean(draft);
+  const autosave = useDraft({
+    kind: "entry",
+    id: draft?.id,
+    enabled: drafting,
+    payload: {
+      title,
+      entryDate,
+      location,
+      mood,
+      category,
+      body,
+      visibility,
+      photos: ready.map((it) => ({ id: it.photo.id, caption: it.caption })),
+      coverPhotoId: effectiveCover,
+    },
+  });
+
   // Mark the form changed whenever any field changes after the first render.
   const touch =
     <T,>(set: (v: T) => void) =>
@@ -61,18 +114,23 @@ export function EntryForm({ entry, today }: EntryFormProps) {
       setDirty(true);
     };
 
-  // Warn before leaving with unsaved changes.
+  // Warn before leaving with unsaved changes. New entries keep everything in
+  // their draft, so they only warn while a draft save is still in flight.
+  const unsaved = drafting ? autosave.status === "saving" : dirty;
   useEffect(() => {
-    if (!dirty || saving) return;
+    if (!unsaved || saving) return;
     const warn = (e: BeforeUnloadEvent) => e.preventDefault();
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [dirty, saving]);
+  }, [unsaved, saving]);
 
   function save() {
     setResult({});
     startSaving(async () => {
+      // Stop autosaving so the draft isn't recreated once the entry is saved.
+      if (drafting) await autosave.pause();
       const res = await saveEntry({
+        draftId: drafting ? draft?.id : undefined,
         id: entry?.id,
         title,
         entryDate,
@@ -86,6 +144,7 @@ export function EntryForm({ entry, today }: EntryFormProps) {
       });
       // On success the action redirects; anything returned is a problem.
       if (res) {
+        if (drafting) autosave.resume();
         setResult(res);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -105,12 +164,16 @@ export function EntryForm({ entry, today }: EntryFormProps) {
       className="mx-auto flex w-full max-w-180 flex-col gap-6"
     >
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-section md:text-section-lg">{entry ? "Edit entry" : "New entry"}</h1>
+        <div className="flex flex-col">
+          <h1 className="text-section md:text-section-lg">{entry ? "Edit entry" : "New entry"}</h1>
+          {drafting && <DraftStatus status={autosave.status} error={autosave.error} />}
+        </div>
         <Link
           href={closeHref}
-          aria-label="Close without saving"
+          aria-label={drafting ? "Close and keep as a draft" : "Close without saving"}
           onClick={(e) => {
-            if (dirty && !window.confirm("Leave without saving your changes?")) e.preventDefault();
+            if (!drafting && dirty && !window.confirm("Leave without saving your changes?"))
+              e.preventDefault();
           }}
           className="flex size-11 items-center justify-center rounded-xl text-ink hover:bg-linen hover:text-ink"
         >
@@ -191,6 +254,31 @@ export function EntryForm({ entry, today }: EntryFormProps) {
       </div>
 
       <VisibilityToggle value={visibility} onChange={touch(setVisibility)} />
+
+      {drafting && (
+        <ConfirmDialog
+          title="Discard this draft?"
+          description="Everything you've written here and any photos you added will be deleted."
+          confirmLabel="Discard draft"
+          cancelLabel="Keep writing"
+          onConfirm={async () => {
+            await autosave.pause();
+            await autosave.discard();
+            router.push("/admin");
+          }}
+          trigger={(open) => (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={open}
+              className="self-start px-1 text-danger-text hover:text-danger-text"
+            >
+              <Trash2 aria-hidden className="size-4.5" strokeWidth={1.8} />
+              Discard draft
+            </Button>
+          )}
+        />
+      )}
 
       {entry && (
         <ConfirmDialog

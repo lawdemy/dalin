@@ -1,13 +1,14 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { SITE_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { isActive, MORE_ITEMS, NEW_ENTRY_HREF, TAB_ITEMS } from "./nav-items";
+import { NotificationBell } from "./notification-bell";
 import { SignOutButton } from "./sign-out-button";
 
 /** Top bar: wordmark and sign-out; on desktop also the full navigation. */
@@ -36,6 +37,7 @@ export function AdminHeader() {
             <Plus aria-hidden className="size-4.5" strokeWidth={2} />
             New entry
           </Link>
+          <NotificationBell />
           <SignOutButton />
         </div>
       </div>
@@ -48,18 +50,59 @@ function CurrentDesktopLinks() {
   return <DesktopLinks pathname={usePathname()} />;
 }
 
+/** Shown in the header on desktop; the rest sit in the "More" menu. */
+const INLINE_MORE = 2;
+
 function DesktopLinks({ pathname }: { pathname: string | null }) {
-  return [...TAB_ITEMS, ...MORE_ITEMS].map(({ href, label }) => (
-    <Link
-      key={href}
-      href={href}
-      aria-current={isActive(pathname, href) ? "page" : undefined}
-      className={cn(
-        "flex h-11 items-center rounded-xl px-3 text-[0.9375rem] font-medium no-underline hover:bg-linen",
-        isActive(pathname, href) ? "text-accent-dark" : "text-ink hover:text-ink",
-      )}
-    >
-      {label}
-    </Link>
-  ));
+  const inline = [...TAB_ITEMS, ...MORE_ITEMS.slice(0, INLINE_MORE)];
+  const rest = MORE_ITEMS.slice(INLINE_MORE);
+  const menu = useRef<HTMLDetailsElement>(null);
+  const close = () => menu.current?.removeAttribute("open");
+  const restActive = rest.some(({ href }) => isActive(pathname, href));
+
+  return (
+    <>
+      {inline.map(({ href, label }) => (
+        <Link
+          key={href}
+          href={href}
+          aria-current={isActive(pathname, href) ? "page" : undefined}
+          className={cn(
+            "flex h-11 items-center rounded-xl px-3 text-[0.9375rem] font-medium no-underline hover:bg-linen",
+            isActive(pathname, href) ? "text-accent-dark" : "text-ink hover:text-ink",
+          )}
+        >
+          {label}
+        </Link>
+      ))}
+      <details ref={menu} className="relative">
+        <summary
+          className={cn(
+            "flex h-11 cursor-pointer list-none items-center gap-1 rounded-xl px-3 text-[0.9375rem] font-medium hover:bg-linen",
+            restActive ? "text-accent-dark" : "text-ink",
+          )}
+        >
+          More
+          <ChevronDown aria-hidden className="size-4" strokeWidth={1.8} />
+        </summary>
+        <div className="absolute top-12 right-0 z-30 flex w-52 flex-col rounded-xl border border-sand bg-ivory py-1 shadow-menu">
+          {rest.map(({ href, label, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              onClick={close}
+              aria-current={isActive(pathname, href) ? "page" : undefined}
+              className={cn(
+                "flex h-11 items-center gap-3 px-4 text-[0.9375rem] font-medium no-underline hover:bg-linen",
+                isActive(pathname, href) ? "text-accent-dark" : "text-ink hover:text-ink",
+              )}
+            >
+              <Icon aria-hidden className="size-4.5 text-accent" strokeWidth={1.8} />
+              {label}
+            </Link>
+          ))}
+        </div>
+      </details>
+    </>
+  );
 }
