@@ -4,9 +4,11 @@ import {
   CATEGORIES,
   MOODS,
   TIME_ZONE,
+  VISION_STATUSES,
   type BookStatus,
   type Category,
   type Mood,
+  type VisionStatus,
 } from "@/lib/constants";
 
 /** "Sun 11 Oct 2026" from a yyyy-mm-dd date. */
@@ -25,6 +27,10 @@ export function categoryLabel(category: Category) {
 
 export function bookStatusLabel(status: BookStatus) {
   return BOOK_STATUSES.find((s) => s.value === status)?.label ?? "Reading now";
+}
+
+export function visionStatusLabel(status: VisionStatus) {
+  return VISION_STATUSES.find((s) => s.value === status)?.label ?? "Dreaming of it";
 }
 
 /** "Started 3 Oct 2026 · Finished 1 Nov 2026", or "" without dates. */

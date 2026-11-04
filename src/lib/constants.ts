@@ -47,3 +47,30 @@ export const BOOK_STATUSES = [
 ] as const;
 
 export type BookStatus = (typeof BOOK_STATUSES)[number]["value"];
+
+// Labels for the vision_status enum (migration 0013).
+export const VISION_STATUSES = [
+  { value: "dreaming", label: "Dreaming of it" },
+  { value: "working", label: "Working on it" },
+  { value: "achieved", label: "Achieved" },
+] as const;
+
+export type VisionStatus = (typeof VISION_STATUSES)[number]["value"];
+
+/** Starting suggestions only: a vision's area is free text and can be anything. */
+export const VISION_AREA_SUGGESTIONS = [
+  "Faith",
+  "Marriage",
+  "Family",
+  "Health",
+  "Finances",
+  "Career",
+  "Business",
+  "Education",
+  "Home",
+  "Travel",
+  "Giving",
+  "Friendships",
+  "Personal growth",
+  "Fun",
+];

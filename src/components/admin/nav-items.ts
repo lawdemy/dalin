@@ -8,6 +8,7 @@ import {
   Library,
   PenLine,
   Settings,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,6 +28,7 @@ export const MORE_ITEMS: NavItem[] = [
   { href: "/admin/foundation", label: "Foundation", icon: GraduationCap },
   { href: "/admin/calendar", label: "Calendar", icon: Calendar },
   { href: "/admin/books", label: "Bookshelf", icon: Library },
+  { href: "/admin/vision", label: "Vision board", icon: Sparkles },
   { href: "/admin/drafts", label: "Drafts", icon: FilePen },
   { href: "/admin/about", label: "About Us editor", icon: PenLine },
   { href: "/admin/settings", label: "Settings", icon: Settings },

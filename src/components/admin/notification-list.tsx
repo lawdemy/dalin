@@ -13,6 +13,7 @@ import {
   MessageCircleHeart,
   NotebookPen,
   PenLine,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -43,6 +44,9 @@ const ICONS: Record<string, LucideIcon> = {
   book_finished: Library,
   book_updated: Library,
   book_note: NotebookPen,
+  vision_added: Sparkles,
+  vision_achieved: Sparkles,
+  vision_updated: Sparkles,
   application: GraduationCap,
 };
 

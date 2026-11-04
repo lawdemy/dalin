@@ -3,9 +3,11 @@ import {
   BOOK_STATUSES,
   CATEGORIES,
   MOODS,
+  VISION_STATUSES,
   type BookStatus,
   type Category,
   type Mood,
+  type VisionStatus,
 } from "@/lib/constants";
 import {
   AFRICAN_COUNTRIES,
@@ -137,6 +139,33 @@ export const bookNoteSchema = z.object({
     .min(1, "Write something first.")
     .max(2000, "Keep it under 2,000 characters."),
 });
+
+// Vision board (migration 0013) ----------------------------------------------------------
+
+const visionStatusValues = VISION_STATUSES.map((s) => s.value) as [VisionStatus, ...VisionStatus[]];
+
+export const visionSchema = z.object({
+  id: z.uuid().optional(),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Describe the vision.")
+    .max(200, "Keep it under 200 characters; the details can go below."),
+  // Free text on purpose: a vision can be about any area of life.
+  area: z
+    .string()
+    .trim()
+    .min(1, "Name the area of life, in any words you like.")
+    .max(60, "Keep the area under 60 characters."),
+  forWhom: z.enum(["family", "me"]),
+  description: optionalText(5000, "Keep it under 5,000 characters."),
+  targetDate: optionalDate,
+  status: z.enum(visionStatusValues),
+  achievedOn: optionalDate,
+  photoId: z.uuid().nullable(),
+});
+
+export type VisionInput = z.input<typeof visionSchema>;
 
 // Drafts (migration 0010) ----------------------------------------------------------------
 // Drafts hold unfinished work, so nothing is required; only sizes are limited.
