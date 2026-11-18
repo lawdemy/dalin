@@ -1,5 +1,5 @@
 import { addDays, differenceInCalendarMonths, format, parseISO } from "date-fns";
-import { EyeOff, FilePen, GraduationCap, Plus } from "lucide-react";
+import { EyeOff, FilePen, GraduationCap, ListChecks, Plus } from "lucide-react";
 import Link from "next/link";
 import { DailyWords } from "@/components/admin/daily-word";
 import { AdminEntryCard } from "@/components/admin/entry-card";
@@ -17,6 +17,7 @@ import { countDrafts, getDraft, getTargetDrafts } from "@/lib/queries/drafts";
 import { countNewApplications } from "@/lib/queries/foundation";
 import { getDashboardNotes } from "@/lib/queries/notes";
 import { getMomentsEnabled } from "@/lib/queries/settings";
+import { countMyWorkToday } from "@/lib/queries/work";
 
 /** How many entries the dashboard shows before pointing to the Timeline. */
 const LIMIT = 500;
@@ -24,16 +25,24 @@ const LIMIT = 500;
 export default async function DashboardPage({ searchParams }: PageProps<"/admin">) {
   const member = await requireMember();
   const { draft: draftParam } = await searchParams;
-  const [{ entries, hasMore }, notes, momentsEnabled, draftCount, noteDraft, newApplications] =
-    await Promise.all([
-      listEntries({ limit: LIMIT }),
-      getDashboardNotes(),
-      getMomentsEnabled(),
-      countDrafts(),
-      // Reopening a note draft from /admin/drafts: ?draft=<id>.
-      typeof draftParam === "string" ? getDraft(draftParam, "note") : null,
-      countNewApplications(),
-    ]);
+  const [
+    { entries, hasMore },
+    notes,
+    momentsEnabled,
+    draftCount,
+    noteDraft,
+    newApplications,
+    work,
+  ] = await Promise.all([
+    listEntries({ limit: LIMIT }),
+    getDashboardNotes(),
+    getMomentsEnabled(),
+    countDrafts(),
+    // Reopening a note draft from /admin/drafts: ?draft=<id>.
+    typeof draftParam === "string" ? getDraft(draftParam, "note") : null,
+    countNewApplications(),
+    countMyWorkToday(),
+  ]);
   const replyDrafts = await getTargetDrafts(
     "note_reply",
     [...notes.today, ...notes.earlier].filter((n) => !n.reply).map((n) => n.id),
@@ -107,6 +116,17 @@ export default async function DashboardPage({ searchParams }: PageProps<"/admin"
         <Plus aria-hidden className="size-5" strokeWidth={2} />
         New entry
       </Link>
+
+      {work.due > 0 && (
+        <Link
+          href="/admin/work"
+          className="-mt-5 flex min-h-11 items-center justify-center gap-2 self-center text-label font-medium"
+        >
+          <ListChecks aria-hidden className="size-4.5" strokeWidth={1.8} />
+          {work.due === 1 ? "1 task for today" : `${work.due} tasks for today`}
+          {work.overdue > 0 && ` (${work.overdue} overdue)`}
+        </Link>
+      )}
 
       {newApplications > 0 && (
         <Link

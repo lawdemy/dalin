@@ -3,10 +3,16 @@ import {
   BOOK_STATUSES,
   CATEGORIES,
   MOODS,
+  TASK_PRIORITIES,
+  TASK_REPEATS,
+  TASK_STATUSES,
   VISION_STATUSES,
   type BookStatus,
   type Category,
   type Mood,
+  type TaskPriority,
+  type TaskRepeat,
+  type TaskStatus,
   type VisionStatus,
 } from "@/lib/constants";
 import {
@@ -166,6 +172,66 @@ export const visionSchema = z.object({
 });
 
 export type VisionInput = z.input<typeof visionSchema>;
+
+// Work planner (migration 0014) ----------------------------------------------------------
+
+const values = <T extends string>(list: readonly { value: T }[]) =>
+  list.map((x) => x.value) as [T, ...T[]];
+
+export const taskStatusSchema = z.enum(values<TaskStatus>(TASK_STATUSES));
+
+export const checklistSchema = z
+  .array(
+    z.object({
+      text: z
+        .string()
+        .trim()
+        .min(1, "Checklist steps can't be empty.")
+        .max(200, "Keep each step under 200 characters."),
+      done: z.boolean(),
+    }),
+  )
+  .max(50, "Keep the checklist to 50 steps.");
+
+const nameSchema = (what: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, `Name the ${what}.`)
+    .max(80, `Keep the ${what} name under 80 characters.`);
+
+export const taskSchema = z.object({
+  id: z.uuid().optional(),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Say what needs doing.")
+    .max(300, "Keep it under 300 characters; details can go in the notes."),
+  notes: optionalText(5000, "Keep the notes under 5,000 characters."),
+  companyId: z.uuid().nullable(),
+  projectId: z.uuid().nullable(),
+  assigneeId: z.uuid().nullable(),
+  status: taskStatusSchema,
+  priority: z.enum(values<TaskPriority>(TASK_PRIORITIES)),
+  dueDate: optionalDate,
+  repeat: z.enum(values<TaskRepeat>(TASK_REPEATS)),
+  checklist: checklistSchema,
+});
+export type TaskInput = z.input<typeof taskSchema>;
+
+export const companySchema = z.object({
+  id: z.uuid().optional(),
+  name: nameSchema("business"),
+  color: z.number().int().min(0).max(7),
+});
+export type CompanyInput = z.input<typeof companySchema>;
+
+export const projectSchema = z.object({
+  id: z.uuid().optional(),
+  companyId: z.uuid(),
+  name: nameSchema("project"),
+});
+export type ProjectInput = z.input<typeof projectSchema>;
 
 // Drafts (migration 0010) ----------------------------------------------------------------
 // Drafts hold unfinished work, so nothing is required; only sizes are limited.

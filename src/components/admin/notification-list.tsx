@@ -9,6 +9,7 @@ import {
   GraduationCap,
   Heart,
   Library,
+  ListChecks,
   MessageCircle,
   MessageCircleHeart,
   NotebookPen,
@@ -47,6 +48,8 @@ const ICONS: Record<string, LucideIcon> = {
   vision_added: Sparkles,
   vision_achieved: Sparkles,
   vision_updated: Sparkles,
+  task_assigned: ListChecks,
+  task_done: ListChecks,
   application: GraduationCap,
 };
 

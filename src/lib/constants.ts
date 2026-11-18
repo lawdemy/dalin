@@ -74,3 +74,46 @@ export const VISION_AREA_SUGGESTIONS = [
   "Personal growth",
   "Fun",
 ];
+
+// Work planner (migration 0014).
+export const TASK_STATUSES = [
+  { value: "pending", label: "Pending" },
+  { value: "in_progress", label: "In progress" },
+  { value: "done", label: "Done" },
+] as const;
+export type TaskStatus = (typeof TASK_STATUSES)[number]["value"];
+
+export const TASK_PRIORITIES = [
+  { value: "low", label: "Low" },
+  { value: "normal", label: "Normal" },
+  { value: "high", label: "High" },
+  { value: "urgent", label: "Urgent" },
+] as const;
+export type TaskPriority = (typeof TASK_PRIORITIES)[number]["value"];
+export const PRIORITY_RANK: Record<TaskPriority, number> = {
+  urgent: 0,
+  high: 1,
+  normal: 2,
+  low: 3,
+};
+
+export const TASK_REPEATS = [
+  { value: "none", label: "Doesn't repeat" },
+  { value: "daily", label: "Every day" },
+  { value: "weekdays", label: "Every weekday (Mon–Fri)" },
+  { value: "weekly", label: "Every week" },
+  { value: "monthly", label: "Every month" },
+] as const;
+export type TaskRepeat = (typeof TASK_REPEATS)[number]["value"];
+
+/** Business colours (work_companies.color is the index). Written out so Tailwind sees them. */
+export const COMPANY_COLORS = [
+  "bg-co-1",
+  "bg-co-2",
+  "bg-co-3",
+  "bg-co-4",
+  "bg-co-5",
+  "bg-co-6",
+  "bg-co-7",
+  "bg-co-8",
+] as const;

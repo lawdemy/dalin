@@ -44,6 +44,16 @@
   --color-tone-6: #d9c3b0;
   --color-tone-ink: #5e544c;
 
+  /* Business colour dots in the work planner (decorative; names always shown) */
+  --color-co-1: #c0846f;
+  --color-co-2: #8fa58a;
+  --color-co-3: #7f95ad;
+  --color-co-4: #d0a85c;
+  --color-co-5: #9a7aa0;
+  --color-co-6: #6fa3a0;
+  --color-co-7: #c98a9e;
+  --color-co-8: #8d8a6a;
+
   /* Type scale (Inter for UI, Cormorant Garamond for headings) */
   --text-micro: 0.75rem; /* 12: badges, tab labels */
   --text-micro--line-height: 1.4;

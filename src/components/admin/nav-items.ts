@@ -6,6 +6,7 @@ import {
   House,
   Image as ImageIcon,
   Library,
+  ListChecks,
   PenLine,
   Settings,
   Sparkles,
@@ -25,6 +26,7 @@ export const TAB_ITEMS: NavItem[] = [
 
 /** Inside the "More" sheet on phones. */
 export const MORE_ITEMS: NavItem[] = [
+  { href: "/admin/work", label: "Work", icon: ListChecks },
   { href: "/admin/foundation", label: "Foundation", icon: GraduationCap },
   { href: "/admin/calendar", label: "Calendar", icon: Calendar },
   { href: "/admin/books", label: "Bookshelf", icon: Library },
